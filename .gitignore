@@ -1,0 +1,20 @@
+# 训练输出
+logs/
+outputs/
+runs/
+checkpoints/
+
+# 模型文件
+*.pt
+*.pth
+*.onnx
+*.jit
+
+# 视频和大文件
+*.mp4
+*.avi
+
+# Python缓存
+__pycache__/
+*.pyc
+.pytest_cache/
