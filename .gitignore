@@ -3,6 +3,9 @@ logs/
 outputs/
 runs/
 checkpoints/
+IsaacLab/
+isaacsim/
+robot_lab/
 
 # 模型文件
 *.pt
