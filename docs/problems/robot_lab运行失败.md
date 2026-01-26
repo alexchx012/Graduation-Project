@@ -6,7 +6,9 @@ isaaclab已安装，D:\IsaacLab，自带conda环境=自带python解释器
 
 robot_lab安装路径：D:\isaaclab-kuozhan\robot_lab
 
-![image-20260125221628692](C:\Users\SNight\Desktop\毕设\Graduation-Project\docs\problems\image-20260125221628692.png)
+
+
+![image-20260125221628692](C:\Users\SNight\Desktop\GP\Graduation-Project\docs\problems\image-20260125221628692.png)
 
 gpt建议安装完成之后执行`python -c "import robot_lab; print(robot_lab.__file__)"`
 
