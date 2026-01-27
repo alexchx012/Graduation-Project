@@ -1,0 +1,90 @@
+(env_isaaclab) PS D:\IsaacLab> Get-Process | ? { $_.ProcessName -match "isaac|kit|python" } | Select-Object Name,Id,CPU,WS
+
+Name      Id  CPU         WS
+----      --  ---         --
+python 19532 9961 1498574848
+
+
+(env_isaaclab) PS D:\IsaacLab> Get-Content "C:\Users\SNight\AppData\Local\Temp\isaaclab\logs\isaaclab_2026-01-27_19-02-23.log" -Tail 80
+2026-01-27 19:02:23 [simulation_context.py:833] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.
+(env_isaaclab) PS D:\IsaacLab> Get-Content "D:\IsaacLab\_isaac_sim\kit\logs\Kit\Isaac-Sim\5.1\kit_20260127_190158.log" -Tail 80
+
+2026-01-27T11:02:17Z [18,803ms] [Info] [gpu.foundation.plugin] CPU performance profile: 平衡
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin] ECC is disabled on physical device 0
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin] vGPU License Report:
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]    Physical device 0
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]    GPU virtualization mode: Bare metal
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]    Grid License Supported: False
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]    Number of licenseable features: 0
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin] Physical device 0:
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]  PCIe Link Generation
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]          Current 4
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]          Max     4
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]  PCIe Link Width
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]          Current 4
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]          Max     8
+2026-01-27T11:02:17Z [18,805ms] [Warning] [gpu.foundation.plugin] PCIe link width current (4) and maximum (8) for device 0 don't match.
+2026-01-27T11:02:17Z [18,806ms] [Info] [omni.physx.foundation.plugin] PhysXFoundation: GpuFoundation created. Driver version is 591.74
+2026-01-27T11:02:17Z [18,806ms] [Info] [omni.physx.plugin] Using CUDA device ordinal 0.
+2026-01-27T11:02:17Z [19,204ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdSemantics\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,209ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdProc\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdRi\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.semantics-0.0.0+69cbf6ad.wx64.r.cp311\plugins\semantics\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdHydra\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdGeom\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.anim-0.0.0+69cbf6ad.wx64.r.cp311\plugins\retargetingSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status: in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usd\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.physx-107.3.26+107.3.3.wx64.r.cp311.u353\plugins\PhysxSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.physx-107.3.26+107.3.3.wx64.r.cp311.u353\plugins\OmniUsdPhysicsDeformableSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.anim-0.0.0+69cbf6ad.wx64.r.cp311\plugins\animationSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdLux\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdRender\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.audio-0.0.0+69cbf6ad.wx64.r.cp311\plugins\omniAudioSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.anim-0.0.0+69cbf6ad.wx64.r.cp311\plugins\omniSkelSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdShade\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,212ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdSkel\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,212ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdUI\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,212ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdMedia\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,212ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdPhysics\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,213ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdVol\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,213ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.physx-107.3.26+107.3.3.wx64.r.cp311.u353\plugins\PhysxSchemaAddition\resources\generatedSchema.usda' for read        
+
+2026-01-27T11:02:17Z [19,238ms] [Info] [omni.kit.app.plugin] kEventAppReady event was delayed by: omni.usd,omni.usd
+2026-01-27T11:02:17Z [19,241ms] [Info] [simulation_app.simulation_app] SimulationApp._prepare_ui: Starting UI setup
+2026-01-27T11:02:17Z [19,242ms] [Info] [omni.kit.app.plugin] [19.411s] app ready
+2026-01-27T11:02:17Z [19,242ms] [Info] [omni.kit.app._impl] python GC: gc.enable()
+2026-01-27T11:02:18Z [19,442ms] [Info] [simulation_app.simulation_app] SimulationApp._prepare_ui: UI setup completed
+2026-01-27T11:02:18Z [19,444ms] [Info] [simulation_app.simulation_app] SimulationApp._wait_for_viewport: Starting viewport wait
+2026-01-27T11:02:18Z [19,444ms] [Info] [simulation_app.simulation_app] SimulationApp._wait_for_viewport: Exception during viewport wait: No module named 'omni.kit.viewport'
+2026-01-27T11:02:18Z [19,444ms] [Info] [simulation_app.simulation_app] SimulationApp._wait_for_viewport: Running final update frames for docking
+2026-01-27T11:02:18Z [19,445ms] [Info] [simulation_app.simulation_app] SimulationApp._wait_for_viewport: Viewport wait completed
+2026-01-27T11:02:18Z [19,445ms] [Info] [omni.kit.app.plugin] [19.613s] Simulation App Startup Complete
+2026-01-27T11:02:23Z [24,626ms] [Info] [isaacsim.core.api.physics_context.physics_context] Defining a new Physics Scene at path `/physicsScene`
+2026-01-27T11:02:23Z [24,687ms] [Info] [carb.omniclient.plugin]  Main: provider_http: Successfully created S3 provider for https://omniverse-content-production.s3-us-west-2.amazonaws.com2026-01-27T11:02:23Z [25,380ms] [Info] [carb.omniclient.plugin]  Tick: provider_http: Using CloudFront http://dcb18d6mfegct.cloudfront.net/, List = No
+2026-01-27T11:02:25Z [26,473ms] [Info] [omni.usd] Status: in Open at line 72 of C:\g\181840452\source\library\OmniUsdAsset.cpp -- OmniUsdResolver: Opened asset 'https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/IsaacLab/Robots/Unitree/Go1/go1.usd' for read
+
+(env_isaaclab) PS D:\IsaacLab>

@@ -1,0 +1,30 @@
+(env_isaaclab) PS D:\IsaacLab> Get-Item "D:\IsaacLab\_isaac_sim\kit\logs\Kit\Isaac-Sim\5.1\kit_20260127_190158.log" | Select-Object Length,LastWriteTime
+
+Length LastWriteTime     
+------ -------------     
+332437 2026/1/27 19:02:25
+
+
+(env_isaaclab) PS D:\IsaacLab> Get-Item "D:\IsaacLab\_isaac_sim\kit\logs\Kit\Isaac-Sim\5.1\kit_20260127_190158.log" | Select-Object Length,LastWriteTime
+
+Length LastWriteTime     
+------ -------------     
+342242 2026/1/27 19:24:04
+
+
+(env_isaaclab) PS D:\IsaacLab> Get-ChildItem "D:\IsaacLab\logs\rsl_rl\unitree_go1_flat\2026-01-27_19-02-23"
+
+
+    目录: D:\IsaacLab\logs\rsl_rl\unitree_go1_flat\2026-01-27_19-02-23
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----         2026/1/27     19:23                git
+d-----         2026/1/27     19:23                params
+-a----         2026/1/27     19:24          32940 events.out.tfevents.1769513011.SNight.19532.0
+-a----         2026/1/27     19:23         983255 model_0.pt
+-a----         2026/1/27     19:24         983777 model_19.pt
+
+
+(env_isaaclab) PS D:\IsaacLab> 

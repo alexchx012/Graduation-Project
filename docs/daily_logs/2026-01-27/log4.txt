@@ -1,0 +1,202 @@
+(env_isaaclab) PS D:\IsaacLab> Get-Content "D:\IsaacLab\_isaac_sim\kit\logs\Kit\Isaac-Sim\5.1\kit_20260127_190158.log" -Tail 200
+            Name                          : ...............\QQ.exe
+            Used GPU Memory               : Not available in WDDM driver model
+        GPU instance ID                   : N/A
+        Compute instance ID               : N/A
+        Process ID                        : 19532
+            Type                          : C
+            Name                          : ...........................................\python.exe
+            Used GPU Memory               : Not available in WDDM driver model
+    Capabilities
+        EGM                                            : disabled
+
+
+2026-01-27T11:02:16Z [17,824ms] [Info] [carb] Initializing plugin: carb.cudainterop.plugin (interfaces: [carb::cudainterop::CudaInterop v0.17]) (impl: carb.cudainterop.plugin)
+2026-01-27T11:02:16Z [17,827ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-01-27T11:02:16Z [17,827ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-01-27T11:02:16Z [17,827ms] [Info] [gpu.foundation.plugin] Skipping software adapter 3: Microsoft Basic Render Driver
+2026-01-27T11:02:16Z [17,829ms] [Info] [gpu.foundation.plugin] NVIDIA Aftermath Status: auto-enabled
+2026-01-27T11:02:16Z [17,829ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-01-27T11:02:16Z [17,829ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-01-27T11:02:16Z [17,829ms] [Info] [gpu.foundation.plugin] Checking TCC on physical device 0
+2026-01-27T11:02:16Z [17,861ms] [Info] [gpu.foundation.plugin] Tesla Compute Cluster (TCC) is disabled for this physical device.
+2026-01-27T11:02:16Z [17,943ms] [Info] [carb.graphics-direct3d.plugin] Enabled NVIDIA Aftermath Version: 2024.1
+2026-01-27T11:02:16Z [18,024ms] [Info] [carb.graphics-direct3d.plugin] Active GPU: NVIDIA GeForce RTX 4060 Laptop GPU
+2026-01-27T11:02:16Z [18,035ms] [Info] [carb] Initializing plugin: carb.failureinjector (interfaces: [carb::IFailureInjector v1.0]) (impl: carb.failureinjector)
+2026-01-27T11:02:17Z [18,733ms] [Info] [gpu.foundation.plugin]
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.74        | Graphics API: D3D12
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 4060 Laptop.. | Yes: 0 |     | 7956    MB | 10de      | e7b00100.. |
+|     |                                  |        |     |            | 28a0      | 0          |
+|     |                                  |        |     |            | 32        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | Intel(R) Graphics                |        |     | 128     MB | 8086      | 49a90100.. |
+|     |                                  |        |     |            | 7dd5      | 0          |
+|     |                                  |        |     |            | N/A       |            |
+|---------------------------------------------------------------------------------------------|
+| 2   | Intel(R) Graphics                |        |     | 128     MB | 8086      | b6a50200.. |
+|     |                                  |        |     |            | 7dd5      | 0          |
+|     |                                  |        |     |            | N/A       |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (23H2), Build: 22631, Kernel: 10.0.22621.4036
+| Processor: Intel(R) Core(TM) Ultra 9 185H
+| Cores: 16 | Logical Cores: 22
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 15989 | Free Memory: 527
+| Total Page/Swap (MB): 37493 | Free Page/Swap: 13287
+|---------------------------------------------------------------------------------------------|
+
+2026-01-27T11:02:17Z [18,803ms] [Info] [gpu.foundation.plugin] CPU performance profile: 平衡
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin] ECC is disabled on physical device 0
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin] vGPU License Report:
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]    Physical device 0
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]    GPU virtualization mode: Bare metal
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]    Grid License Supported: False
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]    Number of licenseable features: 0
+2026-01-27T11:02:17Z [18,804ms] [Info] [gpu.foundation.plugin]
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin] Physical device 0:
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]  PCIe Link Generation
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]          Current 4
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]          Max     4
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]  PCIe Link Width
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]          Current 4
+2026-01-27T11:02:17Z [18,805ms] [Info] [gpu.foundation.plugin]          Max     8
+2026-01-27T11:02:17Z [18,805ms] [Warning] [gpu.foundation.plugin] PCIe link width current (4) and maximum (8) for device 0 don't match.
+2026-01-27T11:02:17Z [18,806ms] [Info] [omni.physx.foundation.plugin] PhysXFoundation: GpuFoundation created. Driver version is 591.74
+2026-01-27T11:02:17Z [18,806ms] [Info] [omni.physx.plugin] Using CUDA device ordinal 0.
+2026-01-27T11:02:17Z [19,204ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdSemantics\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,209ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdProc\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdRi\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.semantics-0.0.0+69cbf6ad.wx64.r.cp311\plugins\semantics\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdHydra\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdGeom\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.anim-0.0.0+69cbf6ad.wx64.r.cp311\plugins\retargetingSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status: in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usd\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.physx-107.3.26+107.3.3.wx64.r.cp311.u353\plugins\PhysxSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,210ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.physx-107.3.26+107.3.3.wx64.r.cp311.u353\plugins\OmniUsdPhysicsDeformableSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.anim-0.0.0+69cbf6ad.wx64.r.cp311\plugins\animationSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdLux\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdRender\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.audio-0.0.0+69cbf6ad.wx64.r.cp311\plugins\omniAudioSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.anim-0.0.0+69cbf6ad.wx64.r.cp311\plugins\omniSkelSchema\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,211ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdShade\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,212ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdSkel\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,212ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdUI\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,212ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdMedia\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,212ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdPhysics\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,213ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdVol\resources\generatedSchema.usda' for read
+
+2026-01-27T11:02:17Z [19,213ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.schema.physx-107.3.26+107.3.3.wx64.r.cp311.u353\plugins\PhysxSchemaAddition\resources\generatedSchema.usda' for read        
+
+2026-01-27T11:02:17Z [19,238ms] [Info] [omni.kit.app.plugin] kEventAppReady event was delayed by: omni.usd,omni.usd
+2026-01-27T11:02:17Z [19,241ms] [Info] [simulation_app.simulation_app] SimulationApp._prepare_ui: Starting UI setup
+2026-01-27T11:02:17Z [19,242ms] [Info] [omni.kit.app.plugin] [19.411s] app ready
+2026-01-27T11:02:17Z [19,242ms] [Info] [omni.kit.app._impl] python GC: gc.enable()
+2026-01-27T11:02:18Z [19,442ms] [Info] [simulation_app.simulation_app] SimulationApp._prepare_ui: UI setup completed
+2026-01-27T11:02:18Z [19,444ms] [Info] [simulation_app.simulation_app] SimulationApp._wait_for_viewport: Starting viewport wait
+2026-01-27T11:02:18Z [19,444ms] [Info] [simulation_app.simulation_app] SimulationApp._wait_for_viewport: Exception during viewport wait: No module named 'omni.kit.viewport'
+2026-01-27T11:02:18Z [19,444ms] [Info] [simulation_app.simulation_app] SimulationApp._wait_for_viewport: Running final update frames for docking
+2026-01-27T11:02:18Z [19,445ms] [Info] [simulation_app.simulation_app] SimulationApp._wait_for_viewport: Viewport wait completed
+2026-01-27T11:02:18Z [19,445ms] [Info] [omni.kit.app.plugin] [19.613s] Simulation App Startup Complete
+2026-01-27T11:02:23Z [24,626ms] [Info] [isaacsim.core.api.physics_context.physics_context] Defining a new Physics Scene at path `/physicsScene`
+2026-01-27T11:02:23Z [24,687ms] [Info] [carb.omniclient.plugin]  Main: provider_http: Successfully created S3 provider for https://omniverse-content-production.s3-us-west-2.amazonaws.com
+2026-01-27T11:02:23Z [25,380ms] [Info] [carb.omniclient.plugin]  Tick: provider_http: Using CloudFront http://dcb18d6mfegct.cloudfront.net/, List = No
+2026-01-27T11:02:25Z [26,473ms] [Info] [omni.usd] Status: in Open at line 72 of C:\g\181840452\source\library\OmniUsdAsset.cpp -- OmniUsdResolver: Opened asset 'https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/IsaacLab/Robots/Unitree/Go1/go1.usd' for read
+
+2026-01-27T11:23:21Z [1,282,523ms] [Info] [omni.usd] Status (secondary thread): in Open at line 72 of C:\g\181840452\source\library\OmniUsdAsset.cpp -- OmniUsdResolver: Opened asset 'https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/IsaacLab/Robots/Unitree/Go1/Props/instanceable_meshes.usd' for read
+
+2026-01-27T11:23:21Z [1,283,262ms] [Info] [omni.usd] Status: in Open at line 72 of C:\g\181840452\source\library\OmniUsdAsset.cpp -- OmniUsdResolver: Opened asset 'https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/Environments/Grid/default_environment.usd' for read
+
+2026-01-27T11:23:23Z [1,285,279ms] [Info] [omni.physx.tensors.plugin] Physics using context 0000024F3452AE40, device 0
+2026-01-27T11:23:26Z [1,287,462ms] [Info] [isaacsim.core.simulation_manager.plugin] onResume: Stored initial time data
+2026-01-27T11:23:26Z [1,288,255ms] [Info] [omni.usd] Status: in Open at line 72 of C:\g\181840452\source\library\OmniUsdAsset.cpp -- OmniUsdResolver: Opened asset 'https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/Props/UIElements/arrow_x.usd' for read
+
+2026-01-27T11:23:26Z [1,288,311ms] [Info] [omni.usd] Status: in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdShaders\resources\shaders\shaderDefs.usda' for read
+
+2026-01-27T11:23:26Z [1,288,339ms] [Info] [omni.usd] Status: in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:\isaaclab\_isaac_sim\extscache\omni.usd.libs-1.0.1+69cbf6ad.wx64.r.cp311\bin\usd\usdHydra\resources\shaders\shaderDefs.usda' for read
+
+2026-01-27T11:23:26Z [1,288,347ms] [Info] [omni.usdMdl] Initializing Neuray
+2026-01-27T11:23:26Z [1,288,347ms] [Info] [carb] Initializing plugin: rtx.neuraylib.plugin (interfaces: [rtx::neuray::NeurayLib v1.5]) (impl: rtx.neuraylib.plugin)
+2026-01-27T11:23:27Z [1,288,770ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] add MDL search path: file:/D:/isaaclab/_isaac_sim/kit/mdl/rtx)
+2026-01-27T11:23:27Z [1,288,770ms] [Info] [rtx.neuraylib.plugin] Added MDL path: 'file:/D:/isaaclab/_isaac_sim/kit/mdl/rtx'
+2026-01-27T11:23:27Z [1,288,771ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] add MDL search path: file:/D:/isaaclab/_isaac_sim/kit/mdl/rtx/iray)
+2026-01-27T11:23:27Z [1,288,772ms] [Info] [rtx.neuraylib.plugin] Added MDL path: 'file:/D:/isaaclab/_isaac_sim/kit/mdl/rtx/iray'
+2026-01-27T11:23:27Z [1,288,772ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] add MDL search path: file:/D:/isaaclab/_isaac_sim/kit/mdl/core/Base)
+2026-01-27T11:23:27Z [1,288,772ms] [Info] [rtx.neuraylib.plugin] Added MDL path: 'file:/D:/isaaclab/_isaac_sim/kit/mdl/core/Base'
+2026-01-27T11:23:27Z [1,288,773ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] add MDL search path: file:/D:/isaaclab/_isaac_sim/kit/mdl/core/Ue4)
+2026-01-27T11:23:27Z [1,288,773ms] [Info] [rtx.neuraylib.plugin] Added MDL path: 'file:/D:/isaaclab/_isaac_sim/kit/mdl/core/Ue4'
+2026-01-27T11:23:27Z [1,288,773ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] add MDL search path: file:/D:/isaaclab/_isaac_sim/kit/mdl/core/VRay)
+2026-01-27T11:23:27Z [1,288,774ms] [Info] [rtx.neuraylib.plugin] Added MDL path: 'file:/D:/isaaclab/_isaac_sim/kit/mdl/core/VRay'
+2026-01-27T11:23:27Z [1,288,774ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] add MDL search path: file:/D:/isaaclab/_isaac_sim/kit/mdl/core/Volume)
+2026-01-27T11:23:27Z [1,288,774ms] [Info] [rtx.neuraylib.plugin] Added MDL path: 'file:/D:/isaaclab/_isaac_sim/kit/mdl/core/Volume'
+2026-01-27T11:23:27Z [1,288,774ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] add MDL search path: file:/D:/isaaclab/_isaac_sim/kit/mdl/core/mdl)
+2026-01-27T11:23:27Z [1,288,774ms] [Info] [rtx.neuraylib.plugin] Added MDL path: 'file:/D:/isaaclab/_isaac_sim/kit/mdl/core/mdl'
+2026-01-27T11:23:27Z [1,288,779ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] add MDL search path: file:/D:/isaaclab/_isaac_sim/extscache/omni.mdl-56.0.3+69cbf6ad.wx64.r.cp311/search_paths/omniverse_exts)
+2026-01-27T11:23:27Z [1,288,779ms] [Info] [rtx.neuraylib.plugin] Added MDL path: 'file:/D:/isaaclab/_isaac_sim/extscache/omni.mdl-56.0.3+69cbf6ad.wx64.r.cp311/search_paths/omniverse_exts'
+2026-01-27T11:23:27Z [1,288,780ms] [Info] [omni.usdMdl] scope: default_scope
+2026-01-27T11:23:27Z [1,288,780ms] [Info] [omni.usdMdl] MdlModuleRegistry::DiscoverPreviewSurfaceModule()
+2026-01-27T11:23:27Z [1,288,781ms] [Info] [omni.usdMdl] MdlModuleRegistry::_GetOrCreateModule(d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl, 1, 1)
+2026-01-27T11:23:27Z [1,288,781ms] [Info] [omni.usdMdl] MdlModuleRegistry::_GetOrCreateModule(d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl, 1, 1)   Done    created: 1
+2026-01-27T11:23:27Z [1,288,781ms] [Info] [omni.usdMdl] ModuleRegistryItem::GetOrCreateModule(1, 1)     assetPath: d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl
+2026-01-27T11:23:27Z [1,288,781ms] [Info] [omni.usdMdl] MdlModule::MdlModule(d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl, 1, 1)
+2026-01-27T11:23:27Z [1,288,781ms] [Info] [omni.usdMdl] Neuray::LoadModule(d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl, UsdPreviewSurface.mdl, 1)
+2026-01-27T11:23:27Z [1,288,860ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] DONE  ::UsdPreviewSurface  <--->  ::UsdPreviewSurface  (file:/D:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl)
+2026-01-27T11:23:27Z [1,288,862ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl' for read
+
+2026-01-27T11:23:27Z [1,288,870ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] DONE  .::UsdPreviewSurfaceLib  <--->  ::UsdPreviewSurfaceLib  (file:/D:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurfaceLib.mdl)
+2026-01-27T11:23:27Z [1,288,870ms] [Info] [omni.usd] Status (secondary thread): in _OpenAsset at line 360 of C:\g\181840452\source\library\OmniUsdResolver_Ar2.cpp -- OmniUsdResolver: Opening filesystem asset 'D:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurfaceLib.mdl' for read
+
+2026-01-27T11:23:27Z [1,288,874ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] CACHED  .::UsdPreviewSurfaceLib  <--->  ::UsdPreviewSurfaceLib  (file:/D:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurfaceLib.mdl)
+2026-01-27T11:23:27Z [1,288,874ms] [Info] [rtx.neuraylib.plugin] [EntityResolver] CACHED  .::UsdPreviewSurfaceLib  <--->  ::UsdPreviewSurfaceLib  (file:/D:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurfaceLib.mdl)
+2026-01-27T11:23:27Z [1,288,879ms] [Info] [rtx.neuraylib.plugin] FileWatcher: Started watching: 'mdl::UsdPreviewSurfaceLib'
+2026-01-27T11:23:27Z [1,288,879ms] [Info] [rtx.neuraylib.plugin] FileWatcher: Started watching: 'mdl::UsdPreviewSurface'
+2026-01-27T11:23:27Z [1,288,880ms] [Info] [omni.usdMdl] MdlNotice::ModuleLoaded d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl
+2026-01-27T11:23:27Z [1,288,880ms] [Info] [omni.usdMdl] Neuray::LoadModule(d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl, UsdPreviewSurface.mdl, 1)  Done    success: 1        
+2026-01-27T11:23:27Z [1,288,882ms] [Info] [omni.usdMdl] MdlModule::MdlModule(d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl, 1, 1)    Done    function count: 21      valid: 1  
+2026-01-27T11:23:27Z [1,288,882ms] [Info] [omni.usdMdl] ModuleRegistryItem::GetOrCreateModule(1, 1)     assetPath: d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl     Done    created: 1
+2026-01-27T11:23:27Z [1,288,884ms] [Info] [omni.usdMdl] MdlModuleRegistry::GetSdrFromDiscoveryResult(d:/isaaclab/_isaac_sim/kit/mdl/rtx/UsdPreviewSurface.mdl, 1)
+2026-01-27T11:23:27Z [1,289,049ms] [Info] [carb] `get_post_update_event_stream` is deprecated. Use Events 2.0. Callstack:   File "d:/isaaclab/source/isaaclab/isaaclab/envs/mdp/commands/velocity_command.py", line 62, in __init__
+    super().__init__(cfg, env)
+  File "d:/isaaclab/source/isaaclab/isaaclab/managers/command_manager.py", line 61, in __init__
+    self.set_debug_vis(self.cfg.debug_vis)
+  File "d:/isaaclab/source/isaaclab/isaaclab/managers/command_manager.py", line 110, in set_debug_vis
+    self._debug_vis_handle = app_interface.get_post_update_event_stream().create_subscription_to_pop(
+  File "D:\IsaacLab\_isaac_sim/kit/kernel/py\carb\__init__.py", line 107, in wrapped
+    obj.__name__, message, "".join(traceback.format_stack(limit=4))[:-1]
+2026-01-27T11:23:30Z [1,291,409ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_goal. 
+2026-01-27T11:23:30Z [1,291,410ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/velocity_current.
+2026-01-27T11:24:03Z [1,325,314ms] [Info] [simulation_app.simulation_app] SimulationApp.close: Closing application
+2026-01-27T11:24:03Z [1,325,314ms] [Info] [simulation_app.simulation_app] SimulationApp.close: Replicator shutdown finished
+2026-01-27T11:24:03Z [1,325,319ms] [Info] [isaacsim.core.simulation_manager.plugin] onStop: Cleared time samples
+2026-01-27T11:24:04Z [1,325,615ms] [Info] [omni.physx.plugin] Using CUDA device ordinal 0.
+2026-01-27T11:24:04Z [1,325,656ms] [Info] [simulation_app.simulation_app] SimulationApp.close: Stage closed
+2026-01-27T11:24:04Z [1,325,658ms] [Info] [omni.kit.app.plugin] [1325.826s] Simulation App Shutting Down
+2026-01-27T11:24:04Z [1,325,734ms] [Info] [simulation_app.simulation_app] SimulationApp.close: shutting down app and releasing framework
+(env_isaaclab) PS D:\IsaacLab>
