@@ -99,3 +99,94 @@ $t$：时间步索引（也可理解为采样序号）
 然后将每个 $t$产生一个梯度贡献向量（被标量$\hat{A}_t$缩放过的向量），把这一批的贡献向量做平均，得到$\hat{g}$这个**总体梯度估计向量**，最后用这个$\hat{g}$去更新参数$θ$
 
 **总结：对每个时间步 $t$，计算梯度向量$\nabla_{\theta} \log \pi_{\theta}\left(a_{t} \mid s_{t}\right)$并用优势标量$\hat{A}_{t}$加权，得到该步的梯度贡献向量；对一批样本做经验平均得到$\hat{g}$，作为策略参数$θ$的更新方向。**
+
+
+
+在机器人运动策略的优化中，我们想要最大化的是“长期期望回报”，也就是在规定时间段内机器人按当前策略运动所拿到的奖励最多。但是这个“长期期望回报”难以对其进行优化，因为**对策略参数$\theta$求梯度时不仅环境是动态且未知的，回报也依赖整条轨迹分布**，所以需要构造一个函数来代替真实目标做优化。用采样数据构造一个**容易算、容易求梯度、并且在更新方向上等价**的目标函数，这个函数就叫代理目标函数$L^{P G}(\theta)$。在策略梯度里，最大化$L^{P G}(\theta)$的梯度所给出的更新方向与提高“长期期望回报”的方向采样近似，所以这个函数叫代理函数。
+$$
+L^{P G}(\theta)=\hat{\mathbb{E}}_{t}\left[\log \pi_{\theta}\left(a_{t} \mid s_{t}\right) \hat{A}_{t}\right]
+$$
+
+$$
+\hat{g}=\hat{\mathbb{E}}_{t}\left[\nabla_{\theta} \log \pi_{\theta}\left(a_{t} \mid s_{t}\right) \hat{A}_{t}\right]
+$$
+
+$$
+\hat{g}=\nabla_{\theta} L^{P G}(\theta)
+$$
+
+代理目标函数$L^{P G}(\theta)$对参数$θ$求梯度就能得出$\hat{g}$，这个$\hat{g}$（向量）就是我想要最大化$L^{P G}(\theta)$所需要前进的方向，后续真正的更新还需乘学习率$\alpha$，并且PPO算法还会加**clip/KL**去限制一次更新不要走太大。
+
+代理目标函数的目标就是使$\pi_{\theta}$这个策略在优势$\hat{A}_{t}$为正的动作$a_{t}$上提高概率、为负的动作上降低概率。
+
+- 当 $\hat{A}_t$> 0：在状态 $s_t$下，提高动作 $a_t$的概率$\pi_\theta(a_t\mid s_t)$
+- 当 $\hat{A}_t$< 0：在状态 $s_t$下，降低动作 $a_t$的概率$\pi_\theta(a_t\mid s_t)$
+
+
+
+信任域方法 TRPO
+
+最大化一个代理目标函数，同时对策略更新的大小施加约束，与PPO不同的是TRPO需要对待优化目标进行线性近似以及对约束进行二次近似后，可以使用共轭梯度算法高效地近似求解该问题。（比PPO复杂）
+$$
+目标函数：\underset{\theta}{\operatorname{maximize}} \hat{\mathbb{E}}_{t}\left[\frac{\pi_{\theta}\left(a_{t} \mid s_{t}\right)}{\pi_{\theta_{\text {old }}}\left(a_{t} \mid s_{t}\right)} \hat{A}_{t}\right]
+$$
+$\underset{\theta}{\operatorname{maximize}}$（对$\theta$最大化）：当前要更新的策略参数（神经网络权重）
+
+$\hat{\mathbb{E}}_{t}$（ E hat t）：对采样到的时间步 $t$做经验平均
+
+$\pi$：策略（动作概率分布/密度）
+
+$\pi_{\theta}$:新策略在状态$s_{t}$下选动作$a_{t}$的概率
+
+$\pi_{\theta_{\text {old }}}\left(a_{t} \mid s_{t}\right)$：旧策略在同一状态下选该动作的概率
+
+$\hat{A}_{t}$（A hat t）：优势估计（该动作相对“平均水平”的好/坏程度）
+
+现在这批数据是用旧策略$\pi_{\theta_{\text {old }}}$采样出的（数据分布属于旧策略），但是我现在想更新到新策略$\pi_{\theta}$，所以需要一个“概率比值”$\frac{\pi_{\theta}\left(a_{t} \mid s_{t}\right)}{\pi_{\theta_{\text {old }}}\left(a_{t} \mid s_{t}\right)}$来衡量**新策略相对于旧策略，对这次的采样动作是更支持还是反对**
+
+同时再乘上优势估计$\hat{A}_{t}$：
+
+- 当 $\hat{A}_t$> 0：目标会鼓励你让**比值**变大 → 新策略更倾向于选这个动作
+- 当 $\hat{A}_t$< 0：目标会鼓励你让**比值**变小 → 新策略减少选这个动作
+
+**目标函数是在用旧数据推动新策略更偏向好动作，远离坏动作**
+
+
+$$
+约束函数：   \text { subject to } \quad \hat{\mathbb{E}}_{t}\left[\operatorname{KL}\left[\pi_{\theta_{\text {old }}}\left(\cdot \mid s_{t}\right), \pi_{\theta}\left(\cdot \mid s_{t}\right)\right]\right] \leq \delta \text {. }
+$$
+$\text { subject to }$（满足约束）：表示下面是约束条件
+
+$\operatorname{KL}$：KL 散度，用来衡量两个策略分布的差异
+
+$⋅$（dot）：占位符，表示“对所有动作的分布”（不是某个具体动作）
+
+$\operatorname{KL}\left[\pi_{\theta_{\text {old }}}\left(\cdot \mid s_{t}\right), \pi_{\theta}\left(\cdot \mid s_{t}\right)\right]$：**在同一状态下，新旧策略整个位于“动作分布层面”的差异**
+
+$\delta$（delta）：信赖域半径/阈值（允许策略变化的最大程度）
+
+约束函数要求采样到的状态$s_{t}$上，新旧策略的分布差异（$\operatorname{KL}$）做平均后 **不能超过$\delta$**。
+
+**信任域思想**：可以改策略，但是每次只能改一小步。因为用的是旧策略来估计更新方向，如果一次性改的太大，这种估计会失真、训练会不稳。
+
+
+
+设$r_t(\theta)$为概率比，$r_t(\theta)=\frac{\pi_{\theta}\left(a_{t} \mid s_{t}\right)}{\pi_{\theta_{\text {old }}}\left(a_{t} \mid s_{t}\right)}$，当$\theta$为$\theta_\text{old}$时，分子分母就是一个东西，所以比值恒等于1，$r_t(\theta_\text{old})=1$
+$$
+L^{C P I}(\theta)=\hat{\mathbb{E}}_{t}\left[\frac{\pi_{\theta}\left(a_{t} \mid s_{t}\right)}{\pi_{\theta_{\text {old }}}\left(a_{t} \mid s_{t}\right)} \hat{A}_{t}\right]=\hat{\mathbb{E}}_{t}\left[r_{t}(\theta) \hat{A}_{t}\right] .
+$$
+$L^{C P I}(\theta)$：CPI是保守策略迭代的缩写，其每次更新策略都要“保守一点”
+
+现有旧策略$\pi_{\theta_{\text {old }}}$采到一批数据（$s_{t}$,$a_t$），现在需要跟新到新策略$\pi_{\theta}$，但是由于成本原因不想重新采样，所以用$r_t(\theta)$做**重要性采样校正**：如果新策略比旧策略更喜欢这个动作（$r_t>1$），那就把这条样本的影响放大，反之缩小。
+
+同时乘上优势$\hat{A}_{t}$：
+
+- $\hat{A}_{t}>0$（这步动作比平均好）：最大化目标会倾向于让$r_t(\theta)$变大 → **提高这个动作在该状态下的概率**
+- $\hat{A}_{t}<0$（比平均差）：会让$r_t(\theta)$变小 → **降低概率**
+
+
+
+**PPO-Clip核心目标函数：**
+$$
+L^{C L I P}(\theta)=\hat{\mathbb{E}}_{t}\left[\min \left(r_{t}(\theta) \hat{A}_{t}, \operatorname{clip}\left(r_{t}(\theta), 1-\epsilon, 1+\epsilon\right) \hat{A}_{t}\right)\right]
+$$
