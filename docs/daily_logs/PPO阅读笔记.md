@@ -311,3 +311,61 @@ $$
 
 
 
+**PPO实际训练时真正优化的总目标：**
+$$
+L_{t}^{C L I P+V F+S}(\theta)=\hat{\mathbb{E}}_{t}\left[\underbrace{L_{t}^{C L I P}(\theta)}_{\text{Actor/策略优化}}-c_{1} \underbrace{L_{t}^{V F}(\theta)}_{\text{Critic/价值拟合}}+c_{2} \underbrace{S\left[\pi_{\theta}\right]\left(s_{t}\right)}_{\text{熵正则化}}\right]
+$$
+$L_{t}^{C L I P+V F+S}(\theta)$：PPO的总目标（策略+价值函数+熵）
+
+$L_{t}^{C L I P}(\theta)$：PPO的截断策略代理目标
+
+$c_1$：值函数损失权重系数
+
+$L_{t}^{V F}(\theta)$：值函数损失
+
+$VF$：价值函数（value function）
+
+$c_2$：熵奖励权重系数
+
+$S\left[\pi_{\theta}\right]\left(s_{t}\right)$：策略在状态$s_t$下的熵
+
+$S$：熵奖励
+
+$\pi_\theta$：参数为$\theta$的策略分布
+
+$s_t$：时间步为$t$的状态
+
+**Actor（执行者）$\equiv$  策略（Policy，$\pi_\theta$）。**Actor是策略的参数化（神经网络）表示。其输入为状态$s_t$，输出为动作$a_t$
+
+**Critic（评论家）$\equiv$  价值函数（Value Function）。**Critic是价值函数的参数化表示。其输入为状态$s_t$，输出为该状态的标量价值$V(s_t)$，即预期未来回报。
+
+这个函数把三件事结合在一起学：
+
+**1.学策略**：用$L_{t}^{C L I P}(\theta)$做稳定的策略改进
+
+**2.学价值函数**：利用$L_{t}^{V F}(\theta)$将$V_\theta(s_t)$尽可能靠近$V_{t}^{targ}$
+
+**3.保持探索**：用熵奖励$S\left[\pi_{\theta}\right]\left(s_{t}\right)$防止策略过早变得“过于确定”
+
+第一项$L^{CLIP}$让策略变好的同时别进步太猛，第二项$L^{VF}$把价值函数误差当做惩罚项（所以前面是减号），第三项$S$奖励更高的熵，鼓励算法继续探索以免过早收敛到局部最优
+
+> 实现里常见写法是“最小化 loss”，那就会把整体取负号，变成最小化$-L^{CLIP}+c_1L^{VF}-c_2S$。论文这里写的是“最大化”的形式。
+
+
+
+$$
+L_{t}^{V F}(\theta)=\left(V_{\theta}\left(s_{t}\right)-V_{t}^{\text {targ }}\right)^{2}
+$$
+$V_\theta(s_t)$：价值函数。是Critic的预测：在当前状态$s_t$下，如果接下来继续按当前策略$\pi_\theta$走，未来长期总奖励。大概有多少
+
+$V_{t}^{\text {targ }}$：价值目标或者叫监督标签（target），是根据采样轨迹算出来的更接近真实回报的目标值
+
+**$V_\theta(s_t),V_{t}^{\text {targ }},\hat{A}_{t}$三者的关系：**
+$$
+V_{t}^{\operatorname{targ}}=\hat{A}_{t}+V_{\theta}\left(s_{t}\right)
+$$
+$\hat{A}_{t}$上面说过叫优势估计，用于衡量该动作相对“平均水平”的好/坏程度。如果大于0，新策略更倾向于选这个动作；如果小于0，那么新策略更倾向于不选这个动作。可以看做$\hat{A}_{t}\approx 实际回报-基线预测$，如果实际回报大于基线预测，那就说明这是个好动作（大于0），反之亦然。
+
+所以$实际回报\approx\hat{A}_{t}+基线预测$，所以$V_{t}^{\operatorname{targ}}=实际回报,V_\theta(s_t)=基线预测$
+
+上面说过我们要最大化$L_{t}^{C L I P+V F+S}(\theta)$，那么既然是$-c_1L_{t}^{V F}(\theta)$，那就需要最小化$L_{t}^{V F}(\theta)$。又因为$L_{t}^{V F}(\theta)$是$V_\theta(s_t)$与$V_{t}^{\text {targ }}$的平方误差，所以我们的**目标就是让这两个数的差值趋近于0**，等同于实际回报$\approx$基线预测
