@@ -364,8 +364,126 @@ $V_{t}^{\text {targ }}$：价值目标或者叫监督标签（target），是根
 $$
 V_{t}^{\operatorname{targ}}=\hat{A}_{t}+V_{\theta}\left(s_{t}\right)
 $$
-$\hat{A}_{t}$上面说过叫优势估计，用于衡量该动作相对“平均水平”的好/坏程度。如果大于0，新策略更倾向于选这个动作；如果小于0，那么新策略更倾向于不选这个动作。可以看做$\hat{A}_{t}\approx 实际回报-基线预测$，如果实际回报大于基线预测，那就说明这是个好动作（大于0），反之亦然。
+$\hat{A}_{t}$上面说过叫优势估计，用于衡量该动作比价值函数预测的“平均水平”好多少。如果大于0，新策略更倾向于选这个动作；如果小于0，那么新策略更倾向于不选这个动作。可以看做$\hat{A}_{t}\approx 实际回报-基线预测$，如果实际回报大于基线预测，那就说明这是个好动作（大于0），反之亦然。
 
 所以$实际回报\approx\hat{A}_{t}+基线预测$，所以$V_{t}^{\operatorname{targ}}=实际回报,V_\theta(s_t)=基线预测$
 
 上面说过我们要最大化$L_{t}^{C L I P+V F+S}(\theta)$，那么既然是$-c_1L_{t}^{V F}(\theta)$，那就需要最小化$L_{t}^{V F}(\theta)$。又因为$L_{t}^{V F}(\theta)$是$V_\theta(s_t)$与$V_{t}^{\text {targ }}$的平方误差，所以我们的**目标就是让这两个数的差值趋近于0**，等同于实际回报$\approx$基线预测
+
+
+
+**如何计算$\hat{A}_{t}$**：利用TD（Temporal Difference）残差+截断版GAE（Generalized Advantage Estimation）
+
+TD：时间差分     GAE：广义优势估计
+$$
+\delta_{t}=r_{t}+\gamma V\left(s_{t+1}\right)-V\left(s_{t}\right)
+$$
+$\delta_t$：TD残差
+
+$r_t$：第t步的即时奖励
+
+$\gamma$：折扣因子（未来奖励打几折）
+
+$V(s_t)$：第$t$步的价值函数
+
+$V\left(s_{t+1}\right)$：第$t+1$步的价值函数
+
+价值函数$V$在状态$s_t$时给一个预测：从现在开始未来总奖励大概是多少
+
+走了一步之后（$t+1$）得到两样东西：
+
+- 这一步的即时奖励$r_t$
+
+- 到了下一步$t+1$的状态，又可以用价值函数进行预测未来总奖励$V(s_{t+1})$
+
+那么现在我就得到了一个“走一步之后的更现实的估计”：现在立刻拿到的分$r_t$+下一步开始的未来分（打折后）$\gamma V\left(s_{t+1}\right)$。TD残差就是把“走了一步之后的更现实的估计”与“上一步的未来估计”做差，也就是预测误差。
+
+假设：
+
+$V(s_t)=10$：原预测未来总奖励
+
+$r_t=1$：这一步拿到了1分
+
+$V\left(s_{t+1}\right)=12$：走了一步后再预测未来总奖励
+
+$\gamma=0.9$：折扣因子
+$$
+\delta_{t}=r_{t}+\gamma V\left(s_{t+1}\right)-V\left(s_{t}\right)=1+0.9\times12-10=11.8-10=1.8
+$$
+也就是说我一开始预计未来总奖励为10，结果走了一步之后再算（这一步的奖励+从这一步开始未来总奖励）发现比上一步（10）还要好，那么上一步的偏差就是1.8，比原来预计的要好1.8分。
+
+
+
+计算$\hat{A}_{t}$只用TD残差还不够，因为它只看了一步，对于长期的好坏完全没算进去，所以需要截断版GAE来看得更远：用一串TD残差做加权求和，得到更平滑、更稳的优势估计$\hat{A}_{t}$
+$$
+\hat{A}_{t}=\delta_{t}+(\gamma \lambda) \delta_{t+1}+\cdots+(\gamma \lambda)^{T-t+1} \delta_{T-1}
+$$
+$\delta_t$：TD残差
+
+$\gamma$（gamma）：折扣因子
+
+$\lambda$（lambda）：GAE参数
+
+$T$：轨迹片段长度
+
+$t$：当前时间步索引
+
+什么叫截断版：由于PPO是一个策略跑$T$步再更新，所以优势估计不能看超过第$T$步，GAE的求和必须在片段末尾被截停
+
+需要注意的是$(\gamma\lambda)$是有幂次的，$\hat{A}_{t}$可以写成：$\hat{A}_{t}=(\gamma \lambda)^0\delta_{t}+(\gamma \lambda)^1 \delta_{t+1}+\cdots+(\gamma \lambda)^{T-t+1} \delta_{T-1}$
+
+幂次=从当前步$t$到那一项$\delta$所在的时间步的距离
+
+- 当前项$\delta_{t}$的距离是0，所以系数是$(\gamma \lambda)^0=1$
+- 下一项$\delta_{t+1}$的距离是1，所以系数是$(\gamma \lambda)^1$
+- 再下一项的距离是2，所以系数是$(\gamma \lambda)^2$
+
+在PPO中，$\gamma$和$\lambda$是常数超参数。**$\gamma$负责“未来奖励打折”：离现在越远，影响越小；$\lambda$负责“GAE看多远”，离现在越远，被信任程度越低**
+
+
+
+PPO算法一次迭代顺序：
+
+1.采样：用旧策略$\pi_{\theta_{\text {old }}}$跑一段数据（$s_t$，$a_t$，$r_t$...）
+
+2.计算价值预测$V_\theta(s_t)$：因为接下来算$\delta_t$和$\hat{A}_{t}$都要用到$V\left(s_{t}\right)$和$V\left(s_{t+1}\right)$
+
+3.计算优势$\hat{A}_{t}$：Actor更新的权重就是$\hat{A}_{t}$，而它依赖价值函数提供“基线”。（计算$\hat{A}_{t}$前先计算$\delta_t$）
+
+4.构造价值目标$V_{t}^{\text {targ }}$：基线$V_\theta(s_t)$+优势$\hat{A}_{t}$
+
+5.最后一起优化：策略项用$\hat{A}_{t}$去推策略（PPO-clip）；价值项用$V_{t}^{\text {targ }}$去回归$V_\theta$
+
+需要注意的是在工程实现时：**在多轮epoch更新时，$\hat{A}_{t}$和$V_{t}^{\text {targ }}$通常会被当做固定标签，不能被梯度穿透，否则目标会变得不稳定**
+
+
+
+PPO算法伪代码：
+
+1**for** interation=1,2,... **do**
+
+2    **for** actor=1,2,...,*N* **do**
+
+3        用旧策略$\pi$，参数为$\theta_{old}$的版本，在环境里跑T步
+
+4        对刚刚这段长度为T的轨迹，计算优势$\hat{A}_{t}$
+
+5    **end for**
+
+6    在这NT条样本上，构造代理函数$L_\theta$，然后做K个epoch的小批量优化，每个mini-batch的大小是M，并且$M\le NT$
+
+7    $\theta_{old}\gets\theta$
+
+8**end for**
+
+第一行：这是PPO的迭代次数，每次iteration都包含用当前策略采样的一批轨迹、用这批轨迹把策略/价值网络更新若干步
+
+第二行：这是并行环境进程，N越大，每一次iteration采样的数据就越多
+
+第三行：用旧策略的版本在环境里跑T步，每一一个时间步会存一条transition，至少包括$s_t,a_t,r_t,V(s_t)$等
+
+第四行：用TD残差+GAE计算优势$\hat{A}_{t}$
+
+第六行：执行PPO-clip算法（$\theta_{old}$在一次iteration的K轮优化里保持不变）
+
+第七行：把$\theta_{old}$更新成当前最新的$\theta$
