@@ -13,7 +13,7 @@ Graduation-Project/
 ├── README.md                    # 项目说明
 ├── REPRODUCE.md                 # 复现指南
 ├── requirements.txt             # Python依赖
-├── configs/
+├── configs/                     # 环境状态：数据库配置，API秘钥，环境常量
 │   ├── env/
 │   │   ├── go1_flat.yaml
 │   │   ├── go1_slope.yaml
@@ -22,7 +22,7 @@ Graduation-Project/
 │   │   └── weight_configs.yaml  # 10组权重配置
 │   └── train/
 │       └── ppo_config.yaml
-├── src/
+├── src/                         # 业务代码，算法，核心组件
 │   ├── envs/
 │   │   └── go1_morl_env.py      # 多目标环境
 │   ├── rewards/
@@ -35,7 +35,7 @@ Graduation-Project/
 │   │   └── metrics.py
 │   └── utils/
 │       └── wandb_logger.py
-├── scripts/
+├── scripts/                     # 构建脚本，部署任务
 │   ├── train_baseline.py        # 单目标训练
 │   ├── train_morl.py            # 多目标训练
 │   ├── evaluate.py              # 评估脚本
@@ -45,5 +45,3 @@ Graduation-Project/
     ├── raw_data/                # 原始实验数据
     └── figures/                 # 生成的图表
 ```
-
-### 

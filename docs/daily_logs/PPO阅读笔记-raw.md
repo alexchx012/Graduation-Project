@@ -460,7 +460,7 @@ PPO算法一次迭代顺序：
 
 PPO算法伪代码：
 
-1**for** interation=1,2,... **do**
+1**for** iteration=1,2,... **do**
 
 2    **for** actor=1,2,...,*N* **do**
 
