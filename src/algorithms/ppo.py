@@ -200,13 +200,20 @@ class PPO:
             # 将内在奖励加到外在奖励上
             self.transition.rewards += self.intrinsic_rewards
 
-        # 超时情况下的Bootstrap（用γ*V(s)补偿被截断的未来奖励）
+        # 超时情况下的Bootstrap（用γ*V(s_t)补偿被截断的未来奖励）
+        #用于修正因时间限制而非自然终止的回合的奖励估计。如果机器人摔倒或任务失败，奖励不变。
+        # 但如果因为时间限制而被截断，说明它还可以继续获得奖励，因此需要用价值函数估计未来奖励并加到当前奖励上。
+        #修正：如果是超时，人为把被截断的未来价值γ*V(s_t)加回奖励里，保证价值估计的连续性。
         if "time_outs" in extras:
+            # 张量操作流程：time_outs[num_envs] -> unsqueeze(1) -> [num_envs,1] -> 与values[num_envs,1]相乘 -> squeeze(1) -> [num_envs]
+            # unsqueeze(1): 给time_outs增加维度以匹配self.transition.values的shape，使元素乘法能够广播
+            # squeeze(1): 移除添加的维度，恢复到[num_envs]形状以匹配rewards
+            # 最终效果：只有超时的环境(time_outs=1)会加上γ*V(s_t)，其他环境(time_outs=0)加0
             self.transition.rewards += self.gamma * torch.squeeze(
                 self.transition.values * extras["time_outs"].unsqueeze(1).to(self.device), 1
             )
 
-        # 记录transition到存储器
+        # 记录transition到存储器并清空临时 Transition
         self.storage.add_transitions(self.transition)
         self.transition.clear()
         self.policy.reset(dones)
@@ -218,10 +225,19 @@ class PPO:
         Â_t = δ_t + (γλ)δ_{t+1} + ... + (γλ)^{T-t+1}δ_{T-1}
         其中TD残差 δ_t = r_t + γV(s_{t+1}) - V(s_t)
         """
+        #这个函数虽然短，但它触发了storage内部去遍历整个缓冲区，利用TD残差和GAE公式算好每个时间步的优势估计A hat t和V targ t，并把他们存回storage。
+
         # 计算最后一步的价值估计（用于GAE计算）
+        # 对应笔记 Sec 15.2: TD残差计算需要 V(s_{t+1})，这里是轨迹末端的那个 V
         last_values = self.policy.evaluate(obs).detach()
+
+        # 对应笔记 Sec 16.2: 利用 gamma 和 lambda 计算 GAE
         self.storage.compute_returns(
-            last_values, self.gamma, self.lam, normalize_advantage=not self.normalize_advantage_per_mini_batch
+            last_values, 
+            self.gamma, 
+            self.lam, 
+            # 对应笔记 Sec 15: 优势估计通常会被归一化以稳定训练
+            normalize_advantage=not self.normalize_advantage_per_mini_batch
         )
 
     def update(self) -> dict[str, float]:
@@ -233,7 +249,7 @@ class PPO:
         # 对称性损失
         mean_symmetry_loss = 0 if self.symmetry else None
 
-        # 获取小批量生成器
+        # 获取Mini-batch生成器
         if self.policy.is_recurrent:
             generator = self.storage.recurrent_mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         else:
@@ -291,6 +307,7 @@ class PPO:
             # 计算KL散度并自适应调整学习率
             if self.desired_kl is not None and self.schedule == "adaptive":
                 with torch.inference_mode():
+                    # 计算当前策略和旧策略的 KL 散度 (公式对应笔记 Sec 7.6)
                     kl = torch.sum(
                         torch.log(sigma_batch / old_sigma_batch + 1.0e-5)
                         + (torch.square(old_sigma_batch) + torch.square(old_mu_batch - mu_batch))
@@ -306,12 +323,12 @@ class PPO:
                         kl_mean /= self.gpu_world_size
 
                     # 仅在主进程更新学习率
-                    # TODO：是否需要？若KL在各GPU上相同，学习率也应一致。
+                    # 动态调整学习率 (对应笔记 Sec 12.4 的逻辑，只是这里调的是 LR 而不是 Beta)
                     if self.gpu_global_rank == 0:
                         if kl_mean > self.desired_kl * 2.0:
-                            self.learning_rate = max(1e-5, self.learning_rate / 1.5)
+                            self.learning_rate = max(1e-5, self.learning_rate / 1.5)# 跑太快了，慢点
                         elif kl_mean < self.desired_kl / 2.0 and kl_mean > 0.0:
-                            self.learning_rate = min(1e-2, self.learning_rate * 1.5)
+                            self.learning_rate = min(1e-2, self.learning_rate * 1.5)# 跑太慢了，快点
 
                     # 在所有GPU上同步学习率
                     if self.is_multi_gpu:
@@ -324,16 +341,26 @@ class PPO:
                         param_group["lr"] = self.learning_rate
 
             # 代理目标损失（PPO-Clip）
-            ratio = torch.exp(actions_log_prob_batch - torch.squeeze(old_actions_log_prob_batch))   # 计算概率比率
+            # 1. 计算概率比 r_t(θ)
+            # 对应笔记 Sec 8.1: exp(log_new - log_old) = new / old
+            ratio = torch.exp(actions_log_prob_batch - torch.squeeze(old_actions_log_prob_batch))
                          #exp操作把对数概率转回比率
+
+            # 2. 计算两项
+            # 对应笔记 Sec 9.1: r_t * A_t             
             surrogate = -torch.squeeze(advantages_batch) * ratio
+            # 对应笔记 Sec 9.1: clip(r_t) * A_t
             surrogate_clipped = -torch.squeeze(advantages_batch) * torch.clamp(
                 ratio, 1.0 - self.clip_param, 1.0 + self.clip_param
             )
+            # 3. 取 Max (注意：代码用了负号变成最小化，所以笔记里的 min 变成了 max)
+            # 对应笔记 Sec 9.1: min(...)
             surrogate_loss = torch.max(surrogate, surrogate_clipped).mean()
 
             # 价值函数损失
+            # 对应笔记 Sec 14.1: (V_theta - V_targ)^2
             if self.use_clipped_value_loss:
+                # 这里用了一个 Trick: 对 Value 也做 Clip，防止价值预测突变
                 value_clipped = target_values_batch + (value_batch - target_values_batch).clamp(
                     -self.clip_param, self.clip_param
                 )
@@ -343,6 +370,8 @@ class PPO:
             else:
                 value_loss = (returns_batch - value_batch).pow(2).mean()
 
+            # 对应笔记 Sec 13.1: L = L_CLIP - c1 * L_VF + c2 * S
+            # 代码这里是最小化 Loss，所以符号全反过来: Loss = Surrogate + c1 * Value_Loss - c2 * Entropy
             loss = surrogate_loss + self.value_loss_coef * value_loss - self.entropy_coef * entropy_batch.mean()
 
             # 对称性损失
@@ -394,7 +423,7 @@ class PPO:
 
             # 计算PPO梯度
             self.optimizer.zero_grad()
-            loss.backward()
+            loss.backward()# 算梯度
             # 计算RND梯度
             if self.rnd:
                 self.rnd_optimizer.zero_grad()
@@ -405,8 +434,8 @@ class PPO:
                 self.reduce_parameters()
 
             # 应用PPO梯度
-            nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
-            self.optimizer.step()
+            nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)# 梯度裁剪 (防爆炸)
+            self.optimizer.step()# 更新参数 θ
             # 应用RND梯度
             if self.rnd_optimizer:
                 self.rnd_optimizer.step()
