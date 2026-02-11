@@ -1,0 +1,389 @@
+﻿[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: D:\IsaacLab\apps\isaaclab.python.headless.kit
+[INFO]: Parsing configuration from: robot_lab.tasks.manager_based.locomotion.velocity.config.quadruped.unitree_go1_ros2.flat_env_cfg:UnitreeGo1Ros2CmdFlatEnvCfg
+[INFO]: Parsing configuration from: isaaclab_tasks.manager_based.locomotion.velocity.config.go1.agents.rsl_rl_ppo_cfg:UnitreeGo1FlatPPORunnerCfg
+[INFO] Logging experiment in directory: C:\Users\SNight\Desktop\GP\Graduation-Project\logs\rsl_rl\unitree_go1_flat
+Exact experiment name requested from command line: 2026-02-11_22-56-57
+
+[36m====================================================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: C:\Users\SNight\AppData\Local\Temp\isaaclab\logs\isaaclab_2026-02-11_22-56-57.log[0m
+[36m====================================================================================================================[0m
+
+[33m22:56:57 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 42
+	Physics step-size     : 0.005
+	Rendering step-size   : 0.02
+	Environment step-size : 0.02
+[33m22:56:59 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m
+Loading user config located at: 'd:/isaaclab/_isaac_sim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: d:/isaaclab/_isaac_sim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260211_225624.log
+2026-02-11T14:56:27Z [2,491ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-02-11T14:56:30Z [6,002ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-02-11T14:56:31Z [6,135ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+2026-02-11T14:56:48Z [23,404ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:56:48Z [23,404ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:56:48Z [23,409ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:56:48Z [23,409ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.74        | Graphics API: D3D12
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 4060 Laptop.. | Yes: 0 |     | 7956    MB | 10de      | 4cb40100.. |
+|     |                                  |        |     |            | 28a0      | 0          |
+|     |                                  |        |     |            | 32        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | Intel(R) Graphics                |        |     | 128     MB | 8086      | 5bad0100.. |
+|     |                                  |        |     |            | 7dd5      | 0          |
+|     |                                  |        |     |            | N/A       |            |
+|---------------------------------------------------------------------------------------------|
+| 2   | Intel(R) Graphics                |        |     | 128     MB | 8086      | 18b20200.. |
+|     |                                  |        |     |            | 7dd5      | 0          |
+|     |                                  |        |     |            | N/A       |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (23H2), Build: 22631, Kernel: 10.0.22621.4036
+| Processor: Intel(R) Core(TM) Ultra 9 185H
+| Cores: 16 | Logical Cores: 22
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 15989 | Free Memory: 3032
+| Total Page/Swap (MB): 46414 | Free Page/Swap: 12922
+|---------------------------------------------------------------------------------------------|
+2026-02-11T14:56:49Z [24,835ms] [Warning] [gpu.foundation.plugin] PCIe link width current (4) and maximum (8) for device 0 don't match.
+python : 2026-02-11T14:57:03Z [38,295ms] [Error] [gpu.foundation.plugin] Driver
+ShaderCacheManager::init() called with a different graphics interface, without 
+a shutdown()!
+所在位置 行:1 字符: 92
++ ... v_isaaclab; python scripts/reinforcement_learning/rsl_rl_ros2/train.p ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-02-11T14:5...t a shutdown()! 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-02-11T14:57:05Z [40,471ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:57:05Z [40,471ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:57:05Z [40,472ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:57:05Z [40,473ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:57:05Z [40,495ms] [Warning] [carb.graphics-vulkan.plugin] Aftermath Error 0xbad00009
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.74        | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 4060 Laptop.. | Yes: 0 |     | 7956    MB | 10de      | 4cb40100.. |
+|     |                                  |        |     |            | 28a0      | 168d642c.. |
+|     |                                  |        |     |            | 32        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | Intel(R) Graphics                |        |     | 7994    MB | 8086      | 5bad0100.. |
+|     |                                  |        |     |            | 7dd5      | 8680d57d.. |
+|     |                                  |        |     |            | N/A       |            |
+|---------------------------------------------------------------------------------------------|
+| 2   | Intel(R) Graphics                |        |     | 7994    MB | 8086      | 18b20200.. |
+|     |                                  |        |     |            | 7dd5      | 8680d57d.. |
+|     |                                  |        |     |            | N/A       |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (23H2), Build: 22631, Kernel: 10.0.22621.4036
+| Processor: Intel(R) Core(TM) Ultra 9 185H
+| Cores: 16 | Logical Cores: 22
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 15989 | Free Memory: 752
+| Total Page/Swap (MB): 46414 | Free Page/Swap: 8332
+|---------------------------------------------------------------------------------------------|
+2026-02-11T14:57:05Z [41,081ms] [Warning] [gpu.foundation.plugin] PCIe link width current (4) and maximum (8) for device 0 don't match.
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxSettingsGlobalRtAdvancedAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxSettingsGlobalRtAdvancedAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxSettingsGlobalPtAdvancedAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxSettingsGlobalPtAdvancedAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxSettingsCommonAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxSettingsCommonAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxSettingsCommonAdvancedAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxSettingsCommonAdvancedAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxSettingsRtAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxSettingsRtAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxSettingsRtAdvancedAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxSettingsRtAdvancedAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxSettingsPtAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxSettingsPtAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxSettingsPtAdvancedAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxSettingsPtAdvancedAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxCameraExposureAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxCameraExposureAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxCameraAutoExposureAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxCameraAutoExposureAPI_1'
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostColorGradingAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,604ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostColorGradingAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostChromaticAberrationAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostChromaticAberrationAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostBloomPhysicalAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostBloomPhysicalAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostMatteObjectAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostMatteObjectAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostCompositingAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostCompositingAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostTonemapAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostTonemapAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostTonemapIrayReinhardAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostTonemapIrayReinhardAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostDofAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostDofAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostMotionBlurAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostMotionBlurAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostTvNoiseAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostTvNoiseAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxDebugSettingsAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxDebugSettingsAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxPostDebugSettingsAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxPostDebugSettingsAPI_1'
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPri
+mDefinition('OmniRtxXrAPI_1') returned nothing
+2026-02-11T14:57:08Z [43,605ms] [Error] [omni.usd-abi.plugin] Could not find Us
+dPrimDefinition for 'OmniRtxXrAPI_1'
+2026-02-11T14:57:24Z [59,658ms] [Warning] [pxr.Semantics] pxr.Semantics is deprecated - please use Semantics instead
+2026-02-11T14:57:25Z [60,883ms] [Warning] [omni.graph.core.plugin] Found duplicate of category 'Replicator' - was 'Annotators', adding 'Fabric Reader'
+2026-02-11T14:57:25Z [60,883ms] [Warning] [omni.graph.core.plugin] Category 'Replicator' not accepted on node type 'omni.replicator.core.FabricReader' in extension 'omni.replicator.core'
+2026-02-11T14:57:25Z [60,887ms] [Warning] [omni.replicator.core.scripts.extension] No material configuration file, adding configuration to material settings directly.
+2026-02-11T14:57:27Z [63,040ms] [Warning] [omni.usd] Warning: in _AdapterLookup at line 284 of C:\g\201060795\USD\pxr\usdImaging\usdImaging\delegate.cpp -- Selected hydra renderer doesn't support prim type 'RenderSettings'
+
+2026-02-11T14:57:32Z [67,818ms] [Error] [omni.graph.core.plugin] Unable to crea
+te prim for graph at /World/ROS2CmdVelGraph
+2026-02-11T14:57:32Z [67,823ms] [Error] [omni.graph.core.plugin] Failed to crea
+te ComputeGraph "/World/ROS2CmdVelGraph". A graph already exists at this path.
+C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\rsl_rl\utils\util
+s.py:245: UserWarning: The observation configuration dictionary 'obs_groups' mu
+st contain the 'policy' key. As an observation group with the name 'policy' was
+ found, this is assumed to be the observation set. Consider adding the 'policy'
+ key to the 'obs_groups' dictionary for clarity. This behavior will be removed 
+in a future version.
+  warnings.warn(
+C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\rsl_rl\utils\util
+s.py:291: UserWarning: The observation configuration dictionary 'obs_groups' mu
+st contain the 'critic' key. As the configuration for 'critic' is missing, the 
+observations from the 'policy' set are used. Consider adding the 'critic' key t
+o the 'obs_groups' dictionary for clarity. This behavior will be removed in a f
+uture version.
+  warnings.warn(
+[INFO]: Time taken for scene creation : 1.948650 seconds
+[INFO]: Scene manager:  <class InteractiveScene>
+	Number of environments: 1
+	Environment spacing   : 2.5
+	Source prim name      : /World/envs/env_0
+	Global prim paths     : ['/World/ground']
+	Replicate physics     : True
+[INFO]: Starting the simulation. This may take a few seconds. Please wait...
+[INFO]: Time taken for simulation start : 2.639694 seconds
+[INFO] Command Manager:  <CommandManager> contains 1 active terms.
++---------------------------------------------+
+|             Active Command Terms            |
++-------+---------------+---------------------+
+| Index | Name          |         Type        |
++-------+---------------+---------------------+
+|   0   | base_velocity | Ros2VelocityCommand |
++-------+---------------+---------------------+
+
+[INFO] Event Manager:  <EventManager> contains 2 active terms.
++--------------------------------------+
+| Active Event Terms in Mode: 'startup' |
++----------+---------------------------+
+|  Index   | Name                      |
++----------+---------------------------+
+|    0     | physics_material          |
+|    1     | add_base_mass             |
++----------+---------------------------+
++---------------------------------------+
+|  Active Event Terms in Mode: 'reset'  |
++--------+------------------------------+
+| Index  | Name                         |
++--------+------------------------------+
+|   0    | base_external_force_torque   |
+|   1    | reset_base                   |
+|   2    | reset_robot_joints           |
++--------+------------------------------+
+
+[INFO] Recorder Manager:  <RecorderManager> contains 0 active terms.
++---------------------+
+| Active Recorder Terms |
++-----------+---------+
+|   Index   | Name    |
++-----------+---------+
++-----------+---------+
+
+[INFO] Action Manager:  <ActionManager> contains 1 active terms.
++------------------------------------+
+|  Active Action Terms (shape: 12)   |
++--------+-------------+-------------+
+| Index  | Name        |   Dimension |
++--------+-------------+-------------+
+|   0    | joint_pos   |          12 |
++--------+-------------+-------------+
+
+[INFO] Observation Manager: <ObservationManager> contains 1 groups.
++---------------------------------------------------------+
+| Active Observation Terms in Group: 'policy' (shape: (48,)) |
++-----------+---------------------------------+-----------+
+|   Index   | Name                            |   Shape   |
++-----------+---------------------------------+-----------+
+|     0     | base_lin_vel                    |    (3,)   |
+|     1     | base_ang_vel                    |    (3,)   |
+|     2     | projected_gravity               |    (3,)   |
+|     3     | velocity_commands               |    (3,)   |
+|     4     | joint_pos                       |   (12,)   |
+|     5     | joint_vel                       |   (12,)   |
+|     6     | actions                         |   (12,)   |
++-----------+---------------------------------+-----------+
+
+[INFO] Termination Manager:  <TerminationManager> contains 2 active terms.
++---------------------------------+
+|     Active Termination Terms    |
++-------+--------------+----------+
+| Index | Name         | Time Out |
++-------+--------------+----------+
+|   0   | time_out     |   True   |
+|   1   | base_contact |  False   |
++-------+--------------+----------+
+
+[INFO] Reward Manager:  <RewardManager> contains 10 active terms.
++-----------------------------------------+
+|           Active Reward Terms           |
++-------+----------------------+----------+
+| Index | Name                 |   Weight |
++-------+----------------------+----------+
+|   0   | track_lin_vel_xy_exp |      1.5 |
+|   1   | track_ang_vel_z_exp  |     0.75 |
+|   2   | lin_vel_z_l2         |     -2.0 |
+|   3   | ang_vel_xy_l2        |    -0.05 |
+|   4   | dof_torques_l2       |  -0.0002 |
+|   5   | dof_acc_l2           | -2.5e-07 |
+|   6   | action_rate_l2       |    -0.01 |
+|   7   | feet_air_time        |     0.25 |
+|   8   | flat_orientation_l2  |     -2.5 |
+|   9   | dof_pos_limits       |      0.0 |
++-------+----------------------+----------+
+
+[INFO] Curriculum Manager:  <CurriculumManager> contains 0 active terms.
++----------------------+
+| Active Curriculum Terms |
++-----------+----------+
+|   Index   | Name     |
++-----------+----------+
++-----------+----------+
+
+[INFO]: Completed setting up the environment...
+Warp DeprecationWarning: The `warp.sim` module is deprecated and will be removed in v1.10. Please transition to using the forthcoming Newton library instead.
+[INFO] isaacsim.ros2.bridge extension enabled
+[DEBUG] Checking graph at /World/ROS2CmdVelGraph: exists=False
+[DEBUG] No prim at /World/ROS2CmdVelGraph
+[WARNING] Graph creation with push evaluator failed: OmniGraphError: Failed to wrap graph in node given {'graph_path': '/World/ROS2CmdVelGraph', 'evaluator_name': 'push'}
+[WARNING] Graph creation with execution evaluator failed: OmniGraphError: Failed to wrap graph in node given {'graph_path': '/World/ROS2CmdVelGraph', 'evaluator_name': 'execution'}
+[ERROR] Failed to setup ROS2 bridge: Failed to create ROS2 subscriber graph:
+  graph_path: /World/ROS2CmdVelGraph
+  tick_node: OnPlaybackTick_3231527591568
+  subscriber_node: SubscribeTwist_3231527591568
+  topic: /go1/cmd_vel
+  error: OmniGraphError: Failed to wrap graph in node given {'graph_path': '/World/ROS2CmdVelGraph', 'evaluator_name': 'execution'}
+  diagnostics: {'stage_root': 'anon:000002E0F65FF710:World0.usd', 'prim_exists': True, 'prim_type': 'OmniGraph', 'world_exists': True}
+[INFO] Training will continue without ROS2 command input
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 policy :  ['policy']
+	 critic :  ['policy']
+--------------------------------------------------------------------------------
+Actor MLP: MLP(
+  (0): Linear(in_features=48, out_features=128, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=128, out_features=128, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=128, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=12, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=48, out_features=128, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=128, out_features=128, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=128, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+################################################################################
+                        [1m Learning iteration 0/1 [0m                        
+
+                       Computation: 8 steps/s (collection: 2.101s, learning 0.718s)
+             Mean action noise std: 1.00
+                    value_function: 0.0332
+                         surrogate: -0.1020
+                           entropy: 17.0128
+Episode_Reward/track_lin_vel_xy_exp: 0.0000
+Episode_Reward/track_ang_vel_z_exp: 0.0000
+       Episode_Reward/lin_vel_z_l2: 0.0000
+      Episode_Reward/ang_vel_xy_l2: 0.0000
+     Episode_Reward/dof_torques_l2: 0.0000
+         Episode_Reward/dof_acc_l2: 0.0000
+     Episode_Reward/action_rate_l2: 0.0000
+      Episode_Reward/feet_air_time: 0.0000
+Episode_Reward/flat_orientation_l2: 0.0000
+     Episode_Reward/dof_pos_limits: 0.0000
+Metrics/base_velocity/cmd_timeout_count: 0.0000
+Metrics/base_velocity/cmd_zero_fallback_count: 0.0000
+      Episode_Termination/time_out: 0.0000
+  Episode_Termination/base_contact: 0.0000
+--------------------------------------------------------------------------------
+                   Total timesteps: 24
+                    Iteration time: 2.82s
+                      Time elapsed: 00:00:02
+                               ETA: 00:00:02
+
+Could not find git repository in C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\rsl_rl\__init__.py. Skipping.
+Storing git diff for 'Graduation-Project' in: C:\Users\SNight\Desktop\GP\Graduation-Project\logs\rsl_rl\unitree_go1_flat\2026-02-11_22-56-57\git\Graduation-Project.diff
+Training time: 4.99 seconds

@@ -1,0 +1,52 @@
+2026-02-11T14:35:18Z [35,172ms] [Error] [gpu.foundation.plugin] DriverShaderCacheManager::init() called with a different graphics interface, without a shutdown()!
+2026-02-11T14:35:23Z [40,825ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxSettingsGlobalRtAdvancedAPI_1') returned nothing
+2026-02-11T14:35:23Z [40,828ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxSettingsGlobalRtAdvancedAPI_1'
+2026-02-11T14:35:23Z [40,830ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxSettingsGlobalPtAdvancedAPI_1') returned nothing
+2026-02-11T14:35:23Z [40,832ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxSettingsGlobalPtAdvancedAPI_1'
+2026-02-11T14:35:23Z [40,833ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxSettingsCommonAPI_1') returned nothing
+2026-02-11T14:35:23Z [40,833ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxSettingsCommonAPI_1'
+2026-02-11T14:35:23Z [40,833ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxSettingsCommonAdvancedAPI_1') returned nothing
+2026-02-11T14:35:23Z [40,833ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxSettingsCommonAdvancedAPI_1'
+2026-02-11T14:35:23Z [40,833ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxSettingsRtAPI_1') returned nothing
+2026-02-11T14:35:23Z [40,833ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxSettingsRtAPI_1'
+2026-02-11T14:35:23Z [40,834ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxSettingsRtAdvancedAPI_1') returned nothing
+2026-02-11T14:35:23Z [40,834ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxSettingsRtAdvancedAPI_1'
+2026-02-11T14:35:24Z [40,834ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxSettingsPtAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,834ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxSettingsPtAPI_1'
+2026-02-11T14:35:24Z [40,834ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxSettingsPtAdvancedAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,834ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxSettingsPtAdvancedAPI_1'
+2026-02-11T14:35:24Z [40,835ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxCameraExposureAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,835ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxCameraExposureAPI_1'
+2026-02-11T14:35:24Z [40,835ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxCameraAutoExposureAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,835ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxCameraAutoExposureAPI_1'
+2026-02-11T14:35:24Z [40,835ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostColorGradingAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,836ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostColorGradingAPI_1'
+2026-02-11T14:35:24Z [40,836ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostChromaticAberrationAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,836ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostChromaticAberrationAPI_1'
+2026-02-11T14:35:24Z [40,836ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostBloomPhysicalAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,836ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostBloomPhysicalAPI_1'
+2026-02-11T14:35:24Z [40,836ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostMatteObjectAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,836ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostMatteObjectAPI_1'
+2026-02-11T14:35:24Z [40,837ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostCompositingAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,837ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostCompositingAPI_1'
+2026-02-11T14:35:24Z [40,837ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostTonemapAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,837ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostTonemapAPI_1'
+2026-02-11T14:35:24Z [40,837ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostTonemapIrayReinhardAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,837ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostTonemapIrayReinhardAPI_1'
+2026-02-11T14:35:24Z [40,837ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostDofAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,837ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostDofAPI_1'
+2026-02-11T14:35:24Z [40,838ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostMotionBlurAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,838ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostMotionBlurAPI_1'
+2026-02-11T14:35:24Z [40,838ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostTvNoiseAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,838ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostTvNoiseAPI_1'
+2026-02-11T14:35:24Z [40,838ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxDebugSettingsAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,838ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxDebugSettingsAPI_1'
+2026-02-11T14:35:24Z [40,838ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxPostDebugSettingsAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,838ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxPostDebugSettingsAPI_1'
+2026-02-11T14:35:24Z [40,839ms] [Error] [omni.usd-abi.plugin] FindAppliedAPIPrimDefinition('OmniRtxXrAPI_1') returned nothing
+2026-02-11T14:35:24Z [40,839ms] [Error] [omni.usd-abi.plugin] Could not find UsdPrimDefinition for 'OmniRtxXrAPI_1'
+2026-02-11T14:35:44Z [61,491ms] [Error] [omni.graph.core.plugin] Unable to create prim for graph at /ActionGraph
+C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\rsl_rl\utils\utils.py:245: UserWarning: The observation configuration dictionary 'obs_groups' must contain the 'policy' key. As an observation group with the name 'policy' was found, this is assumed to be the observation set. Consider adding the 'policy' key to the 'obs_groups' dictionary for clarity. This behavior will be removed in a future version.
+  warnings.warn(
+C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\rsl_rl\utils\utils.py:291: UserWarning: The observation configuration dictionary 'obs_groups' must contain the 'critic' key. As the configuration for 'critic' is missing, the observations from the 'policy' set are used. Consider adding the 'critic' key to the 'obs_groups' dictionary for clarity. This behavior will be removed in a future version.
+  warnings.warn(

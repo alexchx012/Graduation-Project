@@ -1,5 +1,4 @@
 # Original path: src/envs/mdp/commands/ros2_velocity_command.py
-# Also synced to: src/go1-ros2-test/envs/mdp/commands/ros2_velocity_command.py
 # Copyright (c) 2024-2026 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 

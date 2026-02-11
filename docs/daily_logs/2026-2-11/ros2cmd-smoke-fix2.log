@@ -1,0 +1,12 @@
+﻿python : Traceback (most recent call last):
+所在位置 行:1 字符: 1
++ python scripts/reinforcement_learning/rsl_rl_ros2/train.py --task Isa ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last) 
+   ::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\SNight\Desktop\GP\Graduation-Project\scripts\reinforcement_lea
+rning\rsl_rl_ros2\train.py", line 17, in <module>
+    from isaaclab.app import AppLauncher
+ModuleNotFoundError: No module named 'isaaclab'

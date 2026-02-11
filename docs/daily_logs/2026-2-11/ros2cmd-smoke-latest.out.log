@@ -1,0 +1,116 @@
+[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Loading experience file: D:\IsaacLab\apps\isaaclab.python.headless.kit
+[INFO]: Parsing configuration from: robot_lab.tasks.manager_based.locomotion.velocity.config.quadruped.unitree_go1_ros2.flat_env_cfg:UnitreeGo1Ros2CmdFlatEnvCfg
+[INFO]: Parsing configuration from: isaaclab_tasks.manager_based.locomotion.velocity.config.go1.agents.rsl_rl_ppo_cfg:UnitreeGo1FlatPPORunnerCfg
+[INFO] Logging experiment in directory: C:\Users\SNight\Desktop\GP\Graduation-Project\logs\rsl_rl\unitree_go1_flat
+Exact experiment name requested from command line: 2026-02-11_22-03-43
+
+[36m====================================================================================================================[0m
+[36m[1m[INFO][IsaacLab]: Logging to file: C:\Users\SNight\AppData\Local\Temp\isaaclab\logs\isaaclab_2026-02-11_22-03-43.log[0m
+[36m====================================================================================================================[0m
+
+[33m22:03:43 [simulation_context.py] WARNING: The `enable_external_forces_every_iteration` parameter in the PhysxCfg is set to False. If you are experiencing noisy velocities, consider enabling this flag. You may need to slightly increase the number of velocity iterations (setting it to 1 or 2 rather than 0), together with this flag, to improve the accuracy of velocity updates.[0m
+[INFO]: Base environment:
+	Environment device    : cuda:0
+	Environment seed      : 42
+	Physics step-size     : 0.005
+	Rendering step-size   : 0.02
+	Environment step-size : 0.02
+[33m22:03:44 [terrain_importer.py] WARNING: Visual material specified for ground plane but no diffuse color found. Using default color: (0.0, 0.0, 0.0)[0m
+Loading user config located at: 'd:/isaaclab/_isaac_sim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: d:/isaaclab/_isaac_sim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260211_220317.log
+2026-02-11T14:03:20Z [2,491ms] [Warning] [omni.usd_config.extension] Enable omni.materialx.libs extension to use MaterialX
+2026-02-11T14:03:23Z [5,655ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-02-11T14:03:23Z [5,740ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+2026-02-11T14:03:35Z [17,824ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:03:35Z [17,824ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:03:35Z [17,826ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:03:35Z [17,826ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.74        | Graphics API: D3D12
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 4060 Laptop.. | Yes: 0 |     | 7956    MB | 10de      | 4cb40100.. |
+|     |                                  |        |     |            | 28a0      | 0          |
+|     |                                  |        |     |            | 32        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | Intel(R) Graphics                |        |     | 128     MB | 8086      | 5bad0100.. |
+|     |                                  |        |     |            | 7dd5      | 0          |
+|     |                                  |        |     |            | N/A       |            |
+|---------------------------------------------------------------------------------------------|
+| 2   | Intel(R) Graphics                |        |     | 128     MB | 8086      | 18b20200.. |
+|     |                                  |        |     |            | 7dd5      | 0          |
+|     |                                  |        |     |            | N/A       |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (23H2), Build: 22631, Kernel: 10.0.22621.4036
+| Processor: Intel(R) Core(TM) Ultra 9 185H
+| Cores: 16 | Logical Cores: 22
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 15989 | Free Memory: 2857
+| Total Page/Swap (MB): 45909 | Free Page/Swap: 13673
+|---------------------------------------------------------------------------------------------|
+2026-02-11T14:03:35Z [18,461ms] [Warning] [gpu.foundation.plugin] PCIe link width current (4) and maximum (8) for device 0 don't match.
+2026-02-11T14:03:56Z [39,468ms] [Warning] [omni.client.python] Detected a blocking function. This will cause hitches or hangs in the UI. Please switch to the async version:
+  File "C:\Users\SNight\Desktop\GP\Graduation-Project\scripts\reinforcement_learning\rsl_rl_ros2\train.py", line 307, in <module>
+  File "d:/isaaclab/source/isaaclab_tasks/isaaclab_tasks/utils/hydra.py", line 103, in wrapper
+  File "C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\hydra\main.py", line 94, in decorated_main
+  File "C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\hydra\_internal\utils.py", line 394, in _run_hydra
+  File "C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\hydra\_internal\utils.py", line 457, in _run_app
+  File "C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\hydra\_internal\utils.py", line 220, in run_and_report
+  File "C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\hydra\_internal\utils.py", line 458, in <lambda>
+  File "C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\hydra\_internal\hydra.py", line 119, in run
+  File "C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\hydra\core\utils.py", line 186, in run_job
+  File "d:/isaaclab/source/isaaclab_tasks/isaaclab_tasks/utils/hydra.py", line 100, in hydra_main
+  File "C:\Users\SNight\Desktop\GP\Graduation-Project\scripts\reinforcement_learning\rsl_rl_ros2\train.py", line 205, in main
+  File "C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\gymnasium\envs\registration.py", line 734, in make
+  File "d:/isaaclab/source/isaaclab/isaaclab/envs/manager_based_rl_env.py", line 80, in __init__
+  File "d:/isaaclab/source/isaaclab/isaaclab/envs/manager_based_env.py", line 173, in __init__
+  File "d:/isaaclab/source/isaaclab/isaaclab/sim/simulation_context.py", line 519, in reset
+  File "d:/isaaclab/_isaac_sim/exts/isaacsim.core.api/isaacsim/core/api/simulation_context/simulation_context.py", line 644, in reset
+  File "d:/isaaclab/_isaac_sim/exts/isaacsim.core.api/isaacsim/core/api/simulation_context/simulation_context.py", line 914, in play
+  File "d:/isaaclab/source/isaaclab/isaaclab/assets/asset_base.py", line 289, in <lambda>
+  File "d:/isaaclab/source/isaaclab/isaaclab/assets/asset_base.py", line 275, in safe_callback
+  File "d:/isaaclab/source/isaaclab/isaaclab/assets/asset_base.py", line 317, in _initialize_callback
+  File "d:/isaaclab/source/isaaclab/isaaclab/assets/articulation/articulation.py", line 1584, in _initialize_impl
+  File "d:/isaaclab/source/isaaclab/isaaclab/assets/articulation/articulation.py", line 1736, in _process_actuators_cfg
+  File "d:/isaaclab/source/isaaclab/isaaclab/actuators/actuator_net.py", line 127, in __init__
+  File "d:/isaaclab/source/isaaclab/isaaclab/utils/assets.py", line 132, in read_file
+  File "d:/isaaclab/_isaac_sim/kit/extscore/omni.client.lib/omni/client/impl/__init__.py", line 618, in read_file
+
+2026-02-11T14:04:16Z [58,540ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:04:16Z [58,540ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:04:16Z [58,542ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:04:16Z [58,542ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: Intel(R) Graphics
+2026-02-11T14:04:16Z [58,559ms] [Warning] [carb.graphics-vulkan.plugin] Aftermath Error 0xbad00009
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 591.74        | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 4060 Laptop.. | Yes: 0 |     | 7956    MB | 10de      | 4cb40100.. |
+|     |                                  |        |     |            | 28a0      | 168d642c.. |
+|     |                                  |        |     |            | 32        |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | Intel(R) Graphics                |        |     | 7994    MB | 8086      | 5bad0100.. |
+|     |                                  |        |     |            | 7dd5      | 8680d57d.. |
+|     |                                  |        |     |            | N/A       |            |
+|---------------------------------------------------------------------------------------------|
+| 2   | Intel(R) Graphics                |        |     | 7994    MB | 8086      | 18b20200.. |
+|     |                                  |        |     |            | 7dd5      | 8680d57d.. |
+|     |                                  |        |     |            | N/A       |            |
+|=============================================================================================|
+| OS: Windows 11 Pro, Version: 10.0 (23H2), Build: 22631, Kernel: 10.0.22621.4036
+| Processor: Intel(R) Core(TM) Ultra 9 185H
+| Cores: 16 | Logical Cores: 22
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 15989 | Free Memory: 889
+| Total Page/Swap (MB): 45909 | Free Page/Swap: 9352
+|---------------------------------------------------------------------------------------------|
+2026-02-11T14:04:16Z [59,174ms] [Warning] [gpu.foundation.plugin] PCIe link width current (4) and maximum (8) for device 0 don't match.
