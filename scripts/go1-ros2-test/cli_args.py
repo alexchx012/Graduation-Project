@@ -1,4 +1,5 @@
-# Original path: scripts/reinforcement_learning/rsl_rl_ros2/cli_args.py
+# Canonical source: scripts/go1-ros2-test/cli_args.py
+# Deployed to: (standalone script, not in robot_lab package)
 # Copyright (c) 2024-2026 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 

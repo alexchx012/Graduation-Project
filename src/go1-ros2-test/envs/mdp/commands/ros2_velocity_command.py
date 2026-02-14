@@ -1,4 +1,5 @@
-# Original path: src/envs/mdp/commands/ros2_velocity_command.py
+# Canonical source: src/go1-ros2-test/envs/mdp/commands/ros2_velocity_command.py
+# Deployed to: robot_lab/.../velocity/mdp/ros2_velocity_command.py (runtime)
 # Copyright (c) 2024-2026 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 
@@ -31,6 +32,9 @@ class Ros2VelocityCommand(CommandTerm):
 
         self.metrics["cmd_timeout_count"] = torch.zeros(self.num_envs, device=self.device)
         self.metrics["cmd_zero_fallback_count"] = torch.zeros(self.num_envs, device=self.device)
+        self.metrics["cmd_vx"] = torch.zeros(self.num_envs, device=self.device)
+        self.metrics["cmd_vy"] = torch.zeros(self.num_envs, device=self.device)
+        self.metrics["cmd_wz"] = torch.zeros(self.num_envs, device=self.device)
 
     @property
     def command(self) -> torch.Tensor:
@@ -77,21 +81,24 @@ class Ros2VelocityCommand(CommandTerm):
     def _update_command(self):
         self._elapsed_time_s += self._env.step_dt
         latest_cmd, has_new_cmd = self._read_latest_command()
+        elapsed_since_rx = self._elapsed_time_s - self._last_rx_time_s
 
         if has_new_cmd:
             clipped = self._clip_command(latest_cmd)
             self._last_command.copy_(clipped)
             self._last_rx_time_s = self._elapsed_time_s
             self.vel_command_b[:, :] = clipped
-            return
-
-        elapsed_since_rx = self._elapsed_time_s - self._last_rx_time_s
-        if elapsed_since_rx <= self.cfg.cmd_timeout_s:
+        elif elapsed_since_rx <= self.cfg.cmd_timeout_s:
             self.vel_command_b[:, :] = self._last_command
             self.metrics["cmd_timeout_count"] += 1.0
         else:
             self.vel_command_b[:, :] = 0.0
             self.metrics["cmd_zero_fallback_count"] += 1.0
+
+        # Record current command values for TensorBoard
+        self.metrics["cmd_vx"][:] = self.vel_command_b[:, 0]
+        self.metrics["cmd_vy"][:] = self.vel_command_b[:, 1]
+        self.metrics["cmd_wz"][:] = self.vel_command_b[:, 2]
 
     def _read_latest_command(self) -> tuple[torch.Tensor, bool]:
         payload, holder = self._resolve_payload_and_holder()

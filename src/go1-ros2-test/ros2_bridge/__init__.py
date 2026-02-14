@@ -1,4 +1,5 @@
-# Original path: robot_lab/source/robot_lab/robot_lab/ros2_bridge/__init__.py
+# Canonical source: src/go1-ros2-test/ros2_bridge/__init__.py
+# Deployed to: robot_lab/source/robot_lab/robot_lab/ros2_bridge/__init__.py (runtime)
 # Copyright (c) 2024-2026 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 

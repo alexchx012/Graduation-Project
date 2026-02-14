@@ -1,4 +1,5 @@
-# Original path: robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg.py
+# Canonical source: src/go1-ros2-test/envs/flat_env_cfg.py
+# Deployed to: robot_lab/.../config/quadruped/unitree_go1_ros2/flat_env_cfg.py (runtime)
 # Copyright (c) 2024-2026 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 

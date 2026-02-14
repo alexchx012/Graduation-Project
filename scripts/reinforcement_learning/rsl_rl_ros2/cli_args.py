@@ -1,5 +1,4 @@
-# Original path: scripts/reinforcement_learning/rsl_rl_ros2/cli_args.py
-# Also synced to: scripts/go1-ros2-test/cli_args.py
+# DEPRECATED: canonical source is scripts/go1-ros2-test/cli_args.py
 # Copyright (c) 2024-2026 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 

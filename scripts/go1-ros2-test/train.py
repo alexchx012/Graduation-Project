@@ -1,4 +1,5 @@
-# Original path: scripts/reinforcement_learning/rsl_rl_ros2/train.py
+# Canonical source: scripts/go1-ros2-test/train.py
+# Deployed to: (standalone script, not in robot_lab package)
 # Copyright (c) 2024-2026 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 
@@ -287,6 +288,22 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     # dump the configuration into log-directory
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
+
+    # dump ROS2 bridge configuration if applicable
+    if args_cli.task in _ROS2_TASK_IDS and ros2_bridge_adapter is not None:
+        ros2_params = {
+            "topic_name": ros2_bridge_adapter.cfg.topic_name,
+            "queue_size": ros2_bridge_adapter.cfg.queue_size,
+            "startup_mode": ros2_bridge_adapter.cfg.startup_mode,
+            "startup_timeout_s": ros2_bridge_adapter.cfg.startup_timeout_s,
+            "command_attr": ros2_bridge_adapter.cfg.command_attr,
+            "command_stamp_attr": ros2_bridge_adapter.cfg.command_stamp_attr,
+        }
+        try:
+            ros2_params["cmd_timeout_s"] = env_cfg.commands.base_velocity.cmd_timeout_s
+        except AttributeError:
+            ros2_params["cmd_timeout_s"] = "N/A"
+        dump_yaml(os.path.join(log_dir, "params", "ros2.yaml"), ros2_params)
 
     # run training
     try:
