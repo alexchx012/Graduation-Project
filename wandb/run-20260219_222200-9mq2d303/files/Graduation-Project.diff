@@ -1,0 +1,267 @@
+--- git status ---
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   AGENTS.md
+	modified:   docs/daily_logs/2026-2-14/2026-2-14.md
+	modified:   "docs/daily_logs/2026-\346\250\241\346\235\277.md"
+	deleted:    scripts/go1-ros2-test/run/run_go1_ros2_train.ps1
+	deleted:    scripts/go1-ros2-test/run/run_ros2_cmd_node.sh
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	scripts/go1-ros2-test/run/20-cycle test/
+	scripts/go1-ros2-test/run/VF-go1-Formal-Training/
+	wandb/
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/AGENTS.md b/AGENTS.md
+index 178ec98..c71593c 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -15,6 +15,37 @@ Before starting any task in this workspace:
+    - Agent execution in this sandbox: request elevated execution for
+      `conda`/`wsl` access when sandbox restrictions block or may block it.
+ 
++## Task Execution Discipline
++
++### Think first about what you don’t know (Rule 1)
++
++* Before you start, ask yourself: Is the information I have sufficient? What is missing?
++* If it isn’t sufficient, say “I’m missing XXX.” Don’t invent a self-consistent story to fill the gaps.
++* Don’t use data to make psychological attributions; behavior may have real-world causes you can’t see.
++
++### Don’t take shortcuts (Rule 2)
++
++* Before applying a framework, rule out simpler explanations.
++* Don’t use “AI-ish” wording (prohibited: parallelism/rhetorical flourishes, opening with a rhetorical question, end-of-paragraph summaries; if deleting something doesn’t affect the whole, delete it).
++* Don’t flatter: would you say the same if someone else did the same thing? If you can’t produce a comparison sample, don’t praise.
++* Do only what is asked; you may suggest related work, but don’t take it upon yourself to do it.
++
++### After fixing, verify (Rule 3)
++
++* If you changed code, run build/test; only say “fixed” if it passes.
++* If you changed A, grep all references to A and review all related code.
++* Debugging: first understand why it’s wrong → locate the issue → minimal fix → verify.
++
++### Distinguish facts from guesses (Rule 4)
++
++* Clearly label in your output: [Fact] [Inference + Evidence] [Assumption] [Don’t know]
++* If your output contains no “Don’t know,” go back and reassess.
++
++### Trace corrections to the root cause (Rule 5)
++
++* When corrected, answer three things: which assumption was wrong? what other conclusions are affected? how will you intercept it next time?
++
++
+ ## Conda Usage Rules (From Workspace Logs)
+ 
+ After reviewing all files under `docs/daily_logs`:
+diff --git a/docs/daily_logs/2026-2-14/2026-2-14.md b/docs/daily_logs/2026-2-14/2026-2-14.md
+index 473ced1..87e521a 100644
+--- a/docs/daily_logs/2026-2-14/2026-2-14.md
++++ b/docs/daily_logs/2026-2-14/2026-2-14.md
+@@ -18,7 +18,7 @@
+ 
+ 新增 `scripts/go1-ros2-test/ros2_nodes/go1_cmd_model_node.py`。
+ 
+-- 订阅 `/go1/obs_flat`（`Float32MultiArray`），发布 `/go1/cmd_vel`（`Twist`）	
++- 订阅 `/go1/obs_flat`（`Float32MultiArray`），发布 `/go1/cmd_vel`（`Twist`）
+ - 当前 `_infer()` 为桩函数，返回固定 `(vx=0.3, vy=0.0, wz=0.0)`
+ - 预留 `torch.load(model_path)` 占位
+ - 观测日志每 100 条打印一次（`_obs_count` 计数器节流），避免高频输出轰炸
+@@ -138,7 +138,7 @@
+ ## 待办计划
+ 
+ - 可选后续：阶段 9.3 CLI 参数化、第二阶段模型推理闭环（obs 发布 + `go1_cmd_model_node` 真实推理）
+-- **接下来就是实现go1平地快走任务。学习日志工具Weights & Biases的用法。近期目标就是****详细分析velocity tracking reward各项含义，添加自定义reward项，实现各种地形成功训练，能够收敛。最主要就是能理解并修改reward函数**
++- **接下来就是实现go1平地快走任务。学习日志工具Weights & Biases的用法。近期目标就是详细分析velocity tracking reward各项含义，添加自定义reward项，实现各种地形成功训练，能够收敛。最主要就是能理解并修改reward函数**
+ 
+ ## 参考资料
+ 
+diff --git "a/docs/daily_logs/2026-\346\250\241\346\235\277.md" "b/docs/daily_logs/2026-\346\250\241\346\235\277.md"
+index 132698e..df6918e 100644
+--- "a/docs/daily_logs/2026-\346\250\241\346\235\277.md"
++++ "b/docs/daily_logs/2026-\346\250\241\346\235\277.md"
+@@ -1,4 +1,4 @@
+-# 2026-01-26 工作日志
++# 2026-02-19 工作日志
+ 
+ ## 完成内容
+ 
+diff --git a/scripts/go1-ros2-test/run/run_go1_ros2_train.ps1 b/scripts/go1-ros2-test/run/run_go1_ros2_train.ps1
+deleted file mode 100644
+index 9ff1c92..0000000
+--- a/scripts/go1-ros2-test/run/run_go1_ros2_train.ps1
++++ /dev/null
+@@ -1,144 +0,0 @@
+-<#
+-.SYNOPSIS
+-    One-click orchestration: launch WSL ROS2 command node + Windows Isaac Lab training.
+-
+-.DESCRIPTION
+-    1. Starts go1_cmd_script_node.py in WSL Ubuntu-22.04 (background)
+-    2. Waits 3 seconds for ROS2 stabilization
+-    3. Activates conda env_isaaclab and runs training via isaaclab.bat
+-    4. Cleans up WSL process on exit
+-
+-.PARAMETER Profile
+-    Command profile: constant, sine, step (default: constant)
+-
+-.PARAMETER NumEnvs
+-    Number of simulation environments (default: 1)
+-
+-.PARAMETER MaxIter
+-    Maximum training iterations (default: 50)
+-
+-.PARAMETER Vx
+-    Forward velocity in m/s (default: 0.5)
+-
+-.PARAMETER Rate
+-    ROS2 publish rate in Hz (default: 20)
+-
+-.EXAMPLE
+-    .\run_go1_ros2_train.ps1 -Profile sine -MaxIter 100 -Vx 0.3
+-#>
+-
+-param(
+-    [string]$Profile = "constant",
+-    [int]$NumEnvs = 1,
+-    [int]$MaxIter = 50,
+-    [float]$Vx = 0.5,
+-    [float]$Vy = 0.0,
+-    [float]$Wz = 0.0,
+-    [int]$Rate = 20,
+-    [string]$Task = "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-v0",
+-    [int]$Seed = -1
+-)
+-
+-$ErrorActionPreference = "Stop"
+-
+-# Resolve project root (two levels up from this script)
+-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+-$ProjectRoot = (Resolve-Path (Join-Path $ScriptDir "..\..\.." )).Path
+-
+-Write-Host "============================================"
+-Write-Host "  Go1 ROS2 + Isaac Lab Training Orchestrator"
+-Write-Host "============================================"
+-Write-Host "  Profile   : $Profile"
+-Write-Host "  NumEnvs   : $NumEnvs"
+-Write-Host "  MaxIter   : $MaxIter"
+-Write-Host "  Vx/Vy/Wz  : $Vx / $Vy / $Wz"
+-Write-Host "  Rate      : ${Rate}Hz"
+-Write-Host "  Task      : $Task"
+-Write-Host "  Seed      : $Seed"
+-Write-Host "  Project   : $ProjectRoot"
+-Write-Host "============================================"
+-
+-# -- Convert Windows project path to WSL path --
+-$WslProjectRoot = wsl -d Ubuntu-22.04 wslpath -u "$ProjectRoot"
+-
+-$WslRos2Script = "${WslProjectRoot}/scripts/go1-ros2-test/run/run_ros2_cmd_node.sh"
+-$WslRos2Args = "--profile $Profile --vx $Vx --vy $Vy --wz $Wz --rate $Rate"
+-
+-$WslProcess = $null
+-
+-try {
+-    # ========== Step 1: Start WSL ROS2 node (background) ==========
+-    Write-Host ""
+-    Write-Host "[Step 1/4] Starting WSL ROS2 command node (background)..."
+-
+-    $WslCommand = "bash `"$WslRos2Script`" $WslRos2Args"
+-    Write-Host "  CMD: wsl -d Ubuntu-22.04 bash -lc `"$WslCommand`""
+-
+-    $WslProcess = Start-Process -FilePath "wsl" `
+-        -ArgumentList "-d", "Ubuntu-22.04", "bash", "-lc", $WslCommand `
+-        -PassThru -NoNewWindow
+-
+-    Write-Host "  WSL PID: $($WslProcess.Id)"
+-
+-    # ========== Step 2: Wait for ROS2 stabilization ==========
+-    Write-Host ""
+-    Write-Host "[Step 2/4] Waiting 3 seconds for ROS2 to stabilize..."
+-    Start-Sleep -Seconds 3
+-
+-    if ($WslProcess.HasExited) {
+-        Write-Host "[ERROR] WSL ROS2 node exited prematurely (exit code: $($WslProcess.ExitCode))"
+-        exit 1
+-    }
+-    Write-Host "  ROS2 node is running."
+-
+-    # ========== Step 3: Run training ==========
+-    Write-Host ""
+-    Write-Host "[Step 3/4] Starting Isaac Lab training..."
+-
+-    # Activate conda and run training
+-    $CondaHook = "conda shell.powershell hook | Out-String | Invoke-Expression"
+-    Invoke-Expression $CondaHook
+-    conda activate env_isaaclab
+-
+-    $TrainScript = Join-Path $ProjectRoot "scripts\go1-ros2-test\train.py"
+-    $IsaacLabBat = Join-Path $ProjectRoot "IsaacLab\isaaclab.bat"
+-
+-    $TrainArgs = @(
+-        "-p", $TrainScript,
+-        "--task", $Task,
+-        "--num_envs", $NumEnvs,
+-        "--max_iterations", $MaxIter
+-    )
+-
+-    if ($Seed -ge 0) {
+-        $TrainArgs += @("--seed", $Seed)
+-    }
+-
+-    Write-Host "  CMD: $IsaacLabBat $($TrainArgs -join ' ')"
+-
+-    & $IsaacLabBat @TrainArgs
+-
+-    Write-Host ""
+-    Write-Host "[Step 4/4] Training completed successfully."
+-
+-} finally {
+-    # ========== Cleanup: Kill WSL ROS2 process ==========
+-    Write-Host ""
+-    Write-Host "[Cleanup] Terminating WSL ROS2 node..."
+-
+-    if ($null -ne $WslProcess -and -not $WslProcess.HasExited) {
+-        try {
+-            # Kill the go1_cmd_script_node.py process inside WSL
+-            wsl -d Ubuntu-22.04 bash -c "pkill -f go1_cmd_script_node.py 2>/dev/null || true"
+-            Start-Sleep -Seconds 1
+-
+-            if (-not $WslProcess.HasExited) {
+-                $WslProcess.Kill()
+-            }
+-        } catch {
+-            Write-Host "  Warning: Could not cleanly terminate WSL process: $_"
+-        }
+-    }
+-
+-    Write-Host "[Done] Check logs/ for training results."
+-}
+diff --git a/scripts/go1-ros2-test/run/run_ros2_cmd_node.sh b/scripts/go1-ros2-test/run/run_ros2_cmd_node.sh
+deleted file mode 100644
+index b685ccf..0000000
+--- a/scripts/go1-ros2-test/run/run_ros2_cmd_node.sh
++++ /dev/null
+@@ -1,14 +0,0 @@
+-#!/bin/bash
+-# Canonical source: scripts/go1-ros2-test/run/run_ros2_cmd_node.sh
+-# WSL-side launcher for the Go1 ROS2 scripted command node.
+-#
+-# Usage:
+-#   bash run_ros2_cmd_node.sh [--profile sine] [--vx 0.5] [--rate 20] ...
+-
+-set -euo pipefail
+-
+-source /opt/ros/humble/setup.bash
+-
+-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+-
+-python3 "${SCRIPT_DIR}/ros2_nodes/go1_cmd_script_node.py" "$@"

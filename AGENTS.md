@@ -15,6 +15,37 @@ Before starting any task in this workspace:
    - Agent execution in this sandbox: request elevated execution for
      `conda`/`wsl` access when sandbox restrictions block or may block it.
 
+## Task Execution Discipline
+
+### Think first about what you don’t know (Rule 1)
+
+* Before you start, ask yourself: Is the information I have sufficient? What is missing?
+* If it isn’t sufficient, say “I’m missing XXX.” Don’t invent a self-consistent story to fill the gaps.
+* Don’t use data to make psychological attributions; behavior may have real-world causes you can’t see.
+
+### Don’t take shortcuts (Rule 2)
+
+* Before applying a framework, rule out simpler explanations.
+* Don’t use “AI-ish” wording (prohibited: parallelism/rhetorical flourishes, opening with a rhetorical question, end-of-paragraph summaries; if deleting something doesn’t affect the whole, delete it).
+* Don’t flatter: would you say the same if someone else did the same thing? If you can’t produce a comparison sample, don’t praise.
+* Do only what is asked; you may suggest related work, but don’t take it upon yourself to do it.
+
+### After fixing, verify (Rule 3)
+
+* If you changed code, run build/test; only say “fixed” if it passes.
+* If you changed A, grep all references to A and review all related code.
+* Debugging: first understand why it’s wrong → locate the issue → minimal fix → verify.
+
+### Distinguish facts from guesses (Rule 4)
+
+* Clearly label in your output: [Fact] [Inference + Evidence] [Assumption] [Don’t know]
+* If your output contains no “Don’t know,” go back and reassess.
+
+### Trace corrections to the root cause (Rule 5)
+
+* When corrected, answer three things: which assumption was wrong? what other conclusions are affected? how will you intercept it next time?
+
+
 ## Conda Usage Rules (From Workspace Logs)
 
 After reviewing all files under `docs/daily_logs`:
