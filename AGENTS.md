@@ -81,6 +81,29 @@ wsl -d Ubuntu-22.04 bash -lc "<command>"
 
 Fallback distro name (only if needed): `Ubuntu22.04`.
 
+## File Sync Rules (src → robot_lab)
+
+`src/go1-ros2-test/` is the **authoritative copy** for Go1 ROS2 task code.
+After editing any file there, the corresponding file in
+`robot_lab/source/robot_lab/robot_lab/` **must be updated in the same commit/session**.
+
+Known sync pairs:
+
+| Source (edit here first) | Mirror (keep in sync) |
+|---|---|
+| `src/go1-ros2-test/ros2_bridge/twist_subscriber_graph.py` | `robot_lab/source/robot_lab/robot_lab/ros2_bridge/twist_subscriber_graph.py` |
+| `src/go1-ros2-test/ros2_bridge/__init__.py` | `robot_lab/source/robot_lab/robot_lab/ros2_bridge/__init__.py` |
+| `src/go1-ros2-test/envs/mdp/commands/ros2_velocity_command.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/mdp/ros2_velocity_command.py` |
+| `src/go1-ros2-test/envs/flat_env_cfg.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg.py` |
+| `src/go1-ros2-test/envs/__init__.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/__init__.py` |
+
+Notes:
+- `scripts/` and `configs/` are standalone runtime files with no counterparts in
+  `robot_lab/`, `IsaacLab/`, or `Isaacsim/`; they do **not** need to be synced.
+- If a new file is added under `src/go1-ros2-test/`, determine the robot_lab mirror
+  path before the session ends and add it to the table above.
+- After syncing, grep the mirror file to confirm the diff is intentional (no stale code).
+
 ## Last Verified
 
 - Verified on `2026-02-10`.

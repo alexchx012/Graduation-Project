@@ -52,16 +52,29 @@ class Ros2TwistSubscriberAdapter:
             return
 
         try:
+            import os
             import rclpy
             from rclpy.node import Node
             from geometry_msgs.msg import Twist
 
+            # Log ROS2 environment for debugging
+            ros_domain_id = os.environ.get("ROS_DOMAIN_ID", "0 (default)")
+            rmw_impl = os.environ.get("RMW_IMPLEMENTATION", "default")
+            ros_localhost = os.environ.get("ROS_LOCALHOST_ONLY", "0 (default)")
+            fastrtps_cfg = os.environ.get("FASTRTPS_DEFAULT_PROFILES_FILE", "none")
+            print(f"[ROS2 Bridge] ROS_DOMAIN_ID={ros_domain_id}, RMW_IMPLEMENTATION={rmw_impl}")
+            print(f"[ROS2 Bridge] ROS_LOCALHOST_ONLY={ros_localhost}")
+            print(f"[ROS2 Bridge] FASTRTPS_DEFAULT_PROFILES_FILE={fastrtps_cfg}")
+            print(f"[ROS2 Bridge] Subscribing to topic: {self.cfg.topic_name}")
+
             # Initialize rclpy if not already done
             if not rclpy.ok():
                 rclpy.init()
+                print("[ROS2 Bridge] rclpy initialized")
 
             # Create node
             self._node = rclpy.create_node(f"isaac_twist_sub_{id(self)}")
+            print(f"[ROS2 Bridge] Node created: {self._node.get_name()}")
 
             # Create subscription
             self._subscription = self._node.create_subscription(
@@ -70,6 +83,7 @@ class Ros2TwistSubscriberAdapter:
                 self._twist_callback,
                 self.cfg.queue_size,
             )
+            print(f"[ROS2 Bridge] Subscription created for {self.cfg.topic_name}")
 
             self._setup_done = True
             _logger.debug(f"ROS2 rclpy subscriber created for topic: {self.cfg.topic_name}")
@@ -82,6 +96,14 @@ class Ros2TwistSubscriberAdapter:
         with self._lock:
             self._last_cmd = [msg.linear.x, msg.linear.y, msg.angular.z]
             self._last_rx_time = time.time()
+            # Debug: log first few messages
+            if not hasattr(self, "_msg_count"):
+                self._msg_count = 0
+            self._msg_count += 1
+            if self._msg_count <= 5:
+                print(
+                    f"[ROS2 Bridge] Received msg #{self._msg_count}: vx={msg.linear.x:.3f}, vy={msg.linear.y:.3f}, wz={msg.angular.z:.3f}"
+                )
 
     def attach(self, env):
         """Attach to env and register physics callback."""
@@ -95,14 +117,14 @@ class Ros2TwistSubscriberAdapter:
         if sim is None:
             try:
                 from isaacsim.core.api import get_current_simulation_context
+
                 sim = get_current_simulation_context()
             except ImportError:
                 pass
 
         if sim is None or not hasattr(sim, "add_physics_callback"):
             raise RuntimeError(
-                "Cannot find physics callback API. "
-                "Expected env.unwrapped.sim.add_physics_callback() to be available."
+                "Cannot find physics callback API. Expected env.unwrapped.sim.add_physics_callback() to be available."
             )
 
         try:
@@ -121,9 +143,13 @@ class Ros2TwistSubscriberAdapter:
         # Spin once to process any pending messages (non-blocking)
         try:
             import rclpy
+
             rclpy.spin_once(self._node, timeout_sec=0.0)
-        except Exception:
-            pass
+        except Exception as e:
+            # Debug: log spin errors
+            if not hasattr(self, "_spin_error_logged"):
+                print(f"[ROS2 Bridge] spin_once error: {e}")
+                self._spin_error_logged = True
 
         # Copy latest command thread-safely
         with self._lock:
@@ -133,6 +159,13 @@ class Ros2TwistSubscriberAdapter:
         unwrapped = getattr(self._env, "unwrapped", self._env)
         setattr(unwrapped, self.cfg.command_attr, cmd)
         setattr(unwrapped, self.cfg.command_stamp_attr, rx_time)
+
+        # Debug: log sync status periodically
+        if not hasattr(self, "_sync_count"):
+            self._sync_count = 0
+        self._sync_count += 1
+        if self._sync_count == 1 or self._sync_count == 100 or self._sync_count == 1000:
+            print(f"[ROS2 Bridge] Sync #{self._sync_count}: cmd={cmd}, rx_time={rx_time:.2f}")
 
     def wait_for_first_message(self, timeout_s: float = 15.0) -> bool:
         """Block until first non-zero command arrives or timeout."""

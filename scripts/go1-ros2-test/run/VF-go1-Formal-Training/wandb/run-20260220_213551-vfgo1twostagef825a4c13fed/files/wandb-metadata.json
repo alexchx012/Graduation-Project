@@ -1,0 +1,40 @@
+{
+  "os":  "Windows-10-10.0.22631-SP0",
+  "python":  "CPython 3.11.14",
+  "startedAt":  "2026-02-20T13:35:51.127538Z",
+  "program":  "C:\\Users\\SNight\\Desktop\\GP\\Graduation-Project\\scripts\\go1-ros2-test\\train.py",
+  "codePath":  "scripts\\go1-ros2-test\\train.py",
+  "codePathLocal":  "..\\..\\train.py",
+  "git":  {
+    "remote":  "git@github.com:alexchx012/Graduation-Project.git",
+    "commit":  "87611c1b6d677c02e57269e787683477a2049a6a"
+  },
+  "email":  "xzh1184699381@gmail.com",
+  "root":  "C:\\Users\\SNight\\Desktop\\GP\\Graduation-Project\\scripts\\go1-ros2-test\\run\\VF-go1-Formal-Training",
+  "host":  "SNight",
+  "executable":  "C:\\Users\\SNight\\anaconda3\\envs\\env_isaaclab\\python.exe",
+  "cpu_count":  16,
+  "cpu_count_logical":  22,
+  "gpu":  "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "1021820530688",
+      "used":  "684252491776"
+    }
+  },
+  "memory":  {
+    "total":  "16766066688"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "memoryTotal":  "8585740288",
+      "cudaCores":  3072,
+      "architecture":  "Ada",
+      "uuid":  "GPU-168d642c-e7bb-7a81-6483-35ecfbf0ec06"
+    }
+  ],
+  "cudaVersion":  "13.1",
+  "writerId":  "yjwk1odmnvi3cvtrgbvlgcmxi9dlwg5e"
+}

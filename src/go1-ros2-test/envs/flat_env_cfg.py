@@ -15,6 +15,12 @@ from isaaclab_tasks.manager_based.locomotion.velocity.config.go1.flat_env_cfg im
 from robot_lab.tasks.manager_based.locomotion.velocity import mdp
 
 
+_TRACK_LIN_VEL_WEIGHT = 3.5
+_TRACK_ANG_VEL_WEIGHT = 0.35
+_FEET_AIR_TIME_WEIGHT = 0.06
+_ROS2_CMD_TIMEOUT_S = 0.25
+
+
 @configclass
 class UnitreeGo1Ros2CmdFlatEnvCfg(UnitreeGo1FlatEnvCfg):
     """Go1 flat task config for ROS2 high-level command integration."""
@@ -22,12 +28,17 @@ class UnitreeGo1Ros2CmdFlatEnvCfg(UnitreeGo1FlatEnvCfg):
     def __post_init__(self):
         super().__post_init__()
 
+        # Prioritize strict forward-velocity tracking for vx=1.0 workloads.
+        self.rewards.track_lin_vel_xy_exp.weight = _TRACK_LIN_VEL_WEIGHT
+        self.rewards.track_ang_vel_z_exp.weight = _TRACK_ANG_VEL_WEIGHT
+        self.rewards.feet_air_time.weight = _FEET_AIR_TIME_WEIGHT
+
         original_ranges = self.commands.base_velocity.ranges
 
         self.commands.base_velocity = mdp.Ros2VelocityCommandCfg(
             command_attr="ros2_latest_cmd_vel",
             command_stamp_attr="ros2_latest_cmd_stamp_s",
-            cmd_timeout_s=0.5,
+            cmd_timeout_s=_ROS2_CMD_TIMEOUT_S,
             ranges=mdp.Ros2VelocityCommandCfg.Ranges(
                 lin_vel_x=original_ranges.lin_vel_x,
                 lin_vel_y=original_ranges.lin_vel_y,
@@ -43,12 +54,16 @@ class UnitreeGo1Ros2CmdFlatEnvCfg_PLAY(UnitreeGo1FlatEnvCfg_PLAY):
     def __post_init__(self):
         super().__post_init__()
 
+        self.rewards.track_lin_vel_xy_exp.weight = _TRACK_LIN_VEL_WEIGHT
+        self.rewards.track_ang_vel_z_exp.weight = _TRACK_ANG_VEL_WEIGHT
+        self.rewards.feet_air_time.weight = _FEET_AIR_TIME_WEIGHT
+
         original_ranges = self.commands.base_velocity.ranges
 
         self.commands.base_velocity = mdp.Ros2VelocityCommandCfg(
             command_attr="ros2_latest_cmd_vel",
             command_stamp_attr="ros2_latest_cmd_stamp_s",
-            cmd_timeout_s=0.5,
+            cmd_timeout_s=_ROS2_CMD_TIMEOUT_S,
             ranges=mdp.Ros2VelocityCommandCfg.Ranges(
                 lin_vel_x=original_ranges.lin_vel_x,
                 lin_vel_y=original_ranges.lin_vel_y,

@@ -23,22 +23,61 @@ import cli_args  # isort: skip
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
-parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
-parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
-parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
-parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
+parser.add_argument(
+    "--video", action="store_true", default=False, help="Record videos during training."
+)
+parser.add_argument(
+    "--video_length",
+    type=int,
+    default=200,
+    help="Length of the recorded video (in steps).",
+)
+parser.add_argument(
+    "--video_interval",
+    type=int,
+    default=2000,
+    help="Interval between video recordings (in steps).",
+)
+parser.add_argument(
+    "--num_envs", type=int, default=None, help="Number of environments to simulate."
+)
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument(
-    "--agent", type=str, default="rsl_rl_cfg_entry_point", help="Name of the RL agent configuration entry point."
+    "--agent",
+    type=str,
+    default="rsl_rl_cfg_entry_point",
+    help="Name of the RL agent configuration entry point.",
 )
-parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
-parser.add_argument("--max_iterations", type=int, default=None, help="RL Policy training iterations.")
 parser.add_argument(
-    "--distributed", action="store_true", default=False, help="Run training with multiple GPUs or nodes."
+    "--seed", type=int, default=None, help="Seed used for the environment"
 )
-parser.add_argument("--export_io_descriptors", action="store_true", default=False, help="Export IO descriptors.")
 parser.add_argument(
-    "--ray-proc-id", "-rid", type=int, default=None, help="Automatically configured by Ray integration, otherwise None."
+    "--max_iterations", type=int, default=None, help="RL Policy training iterations."
+)
+parser.add_argument(
+    "--distributed",
+    action="store_true",
+    default=False,
+    help="Run training with multiple GPUs or nodes.",
+)
+parser.add_argument(
+    "--disable_ros2_tracking_tune",
+    action="store_true",
+    default=False,
+    help="Disable ROS2-specific PPO hyper-parameter overrides for velocity tracking.",
+)
+parser.add_argument(
+    "--export_io_descriptors",
+    action="store_true",
+    default=False,
+    help="Export IO descriptors.",
+)
+parser.add_argument(
+    "--ray-proc-id",
+    "-rid",
+    type=int,
+    default=None,
+    help="Automatically configured by Ray integration, otherwise None.",
 )
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -63,12 +102,35 @@ _ROS2_TASK_IDS = {
     "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-Play-v0",
 }
 
+
+def _apply_ros2_tracking_tune(agent_cfg: "RslRlBaseRunnerCfg") -> None:
+    """Apply a conservative PPO override tailored for ROS2 velocity tracking tasks."""
+
+    target_init_noise_std = 0.5
+    target_entropy_coef = 0.002
+    target_learning_rate = 5.0e-4
+
+    policy_cfg = getattr(agent_cfg, "policy", None)
+    if policy_cfg is not None and hasattr(policy_cfg, "init_noise_std"):
+        current_noise_std = float(policy_cfg.init_noise_std)
+        policy_cfg.init_noise_std = min(current_noise_std, target_init_noise_std)
+
+    algorithm_cfg = getattr(agent_cfg, "algorithm", None)
+    if algorithm_cfg is not None:
+        if hasattr(algorithm_cfg, "entropy_coef"):
+            algorithm_cfg.entropy_coef = target_entropy_coef
+        if hasattr(algorithm_cfg, "learning_rate"):
+            algorithm_cfg.learning_rate = target_learning_rate
+
+
 if args_cli.task in _ROS2_TASK_IDS and sys.platform == "win32":
     # Prevent child-process crash dialogs from blocking headless automation.
     try:
         import ctypes
 
-        ctypes.windll.kernel32.SetErrorMode(0x0001 | 0x0002)  # SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX
+        ctypes.windll.kernel32.SetErrorMode(
+            0x0001 | 0x0002
+        )  # SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX
     except Exception:
         pass
 
@@ -76,19 +138,47 @@ if args_cli.task in _ROS2_TASK_IDS and sys.platform == "win32":
     if ros_distro not in {"humble", "jazzy"}:
         ros_distro = "humble"
     os.environ["ROS_DISTRO"] = ros_distro
+    # CRITICAL: Set ROS_DOMAIN_ID=0 to match WSL side for DDS discovery
+    os.environ.setdefault("ROS_DOMAIN_ID", "0")
     os.environ.setdefault("RMW_IMPLEMENTATION", "rmw_fastrtps_cpp")
+    # NOTE: Do NOT set ROS_LOCALHOST_ONLY - it conflicts with FastRTPS XML unicast config
+    # when using actual IP addresses (192.168.0.104) for Windows-WSL2 communication
+
+    # Force UDP transport; do not use SHM across the Windows/WSL boundary.
+    os.environ.setdefault("FASTDDS_BUILTIN_TRANSPORTS", "UDPv4")
+
+    # FastRTPS unicast config for Windows <-> WSL2 communication
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(script_dir))
+    fastrtps_config = os.path.join(
+        project_root, "configs", "ros2", "fastrtps_win_to_wsl.xml"
+    )
+    if os.path.isfile(fastrtps_config):
+        os.environ.setdefault("FASTRTPS_DEFAULT_PROFILES_FILE", fastrtps_config)
+        os.environ.setdefault("FASTDDS_DEFAULT_PROFILES_FILE", fastrtps_config)
+        print(f"[ROS2] Using FastRTPS config: {fastrtps_config}")
+    else:
+        print(f"[WARNING] FastRTPS config not found: {fastrtps_config}")
 
     isaacsim_root = os.environ.get("ISAACSIM_PATH")
     if isaacsim_root:
-        ros_lib_dir = os.path.join(isaacsim_root, "exts", "isaacsim.ros2.bridge", ros_distro, "lib")
+        ros_lib_dir = os.path.join(
+            isaacsim_root, "exts", "isaacsim.ros2.bridge", ros_distro, "lib"
+        )
         if os.path.isdir(ros_lib_dir):
             path_entries = [p for p in os.environ.get("PATH", "").split(";") if p]
             if ros_lib_dir not in path_entries:
-                os.environ["PATH"] = ";".join(path_entries + [ros_lib_dir]) if path_entries else ros_lib_dir
+                os.environ["PATH"] = (
+                    ";".join(path_entries + [ros_lib_dir])
+                    if path_entries
+                    else ros_lib_dir
+                )
         else:
             print(f"[WARNING] ROS2 bridge library directory not found: {ros_lib_dir}")
     else:
-        print("[WARNING] ISAACSIM_PATH not set; cannot preconfigure ROS2 bridge library path")
+        print(
+            "[WARNING] ISAACSIM_PATH not set; cannot preconfigure ROS2 bridge library path"
+        )
 
 """Check for minimum supported RSL-RL version."""
 
@@ -101,9 +191,23 @@ RSL_RL_VERSION = "3.0.1"
 installed_version = metadata.version("rsl-rl-lib")
 if version.parse(installed_version) < version.parse(RSL_RL_VERSION):
     if platform.system() == "Windows":
-        cmd = [r".\isaaclab.bat", "-p", "-m", "pip", "install", f"rsl-rl-lib=={RSL_RL_VERSION}"]
+        cmd = [
+            r".\isaaclab.bat",
+            "-p",
+            "-m",
+            "pip",
+            "install",
+            f"rsl-rl-lib=={RSL_RL_VERSION}",
+        ]
     else:
-        cmd = ["./isaaclab.sh", "-p", "-m", "pip", "install", f"rsl-rl-lib=={RSL_RL_VERSION}"]
+        cmd = [
+            "./isaaclab.sh",
+            "-p",
+            "-m",
+            "pip",
+            "install",
+            f"rsl-rl-lib=={RSL_RL_VERSION}",
+        ]
     print(
         f"Please install the correct version of RSL-RL.\nExisting version is: '{installed_version}'"
         f" and required version is: '{RSL_RL_VERSION}'.\nTo install the correct version, run:"
@@ -152,21 +256,43 @@ torch.backends.cudnn.benchmark = False
 
 
 @hydra_task_config(args_cli.task, args_cli.agent)
-def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
+def main(
+    env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg,
+    agent_cfg: RslRlBaseRunnerCfg,
+):
     """Train with RSL-RL agent."""
     # override configurations with non-hydra CLI arguments
     agent_cfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
-    env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
-    agent_cfg.max_iterations = (
-        args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
+    env_cfg.scene.num_envs = (
+        args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
     )
+    agent_cfg.max_iterations = (
+        args_cli.max_iterations
+        if args_cli.max_iterations is not None
+        else agent_cfg.max_iterations
+    )
+
+    if args_cli.task in _ROS2_TASK_IDS and not args_cli.disable_ros2_tracking_tune:
+        _apply_ros2_tracking_tune(agent_cfg)
+        print(
+            "[ROS2 Tune] Applied tracking overrides: "
+            f"init_noise_std={agent_cfg.policy.init_noise_std}, "
+            f"entropy_coef={agent_cfg.algorithm.entropy_coef}, "
+            f"learning_rate={agent_cfg.algorithm.learning_rate}"
+        )
 
     # set the environment seed
     # note: certain randomizations occur in the environment initialization so we set the seed here
     env_cfg.seed = agent_cfg.seed
-    env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
+    env_cfg.sim.device = (
+        args_cli.device if args_cli.device is not None else env_cfg.sim.device
+    )
     # check for invalid combination of CPU device with distributed training
-    if args_cli.distributed and args_cli.device is not None and "cpu" in args_cli.device:
+    if (
+        args_cli.distributed
+        and args_cli.device is not None
+        and "cpu" in args_cli.device
+    ):
         raise ValueError(
             "Distributed training is not supported when using CPU device. "
             "Please use GPU device (e.g., --device cuda) for distributed training."
@@ -187,12 +313,62 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     log_root_path = os.path.abspath(log_root_path)
     print(f"[INFO] Logging experiment in directory: {log_root_path}")
     # specify directory for logging runs: {time-stamp}_{run_name}
-    log_dir = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     # The Ray Tune workflow extracts experiment name using the logging line below, hence, do not change it (see PR #2346, comment-2819298849)
-    print(f"Exact experiment name requested from command line: {log_dir}")
+    print(f"Exact experiment name requested from command line: {run_stamp}")
+    run_dir_name = run_stamp
     if agent_cfg.run_name:
-        log_dir += f"_{agent_cfg.run_name}"
-    log_dir = os.path.join(log_root_path, log_dir)
+        run_dir_name += f"_{agent_cfg.run_name}"
+    log_dir = os.path.join(log_root_path, run_dir_name)
+
+    # When resuming with an explicit W&B run id, keep the original log directory
+    # so wandb config keys (for example log_dir) remain stable across stages.
+    wandb_resume_mode = os.environ.get("WANDB_RESUME", "").strip().lower()
+    shared_wandb_resume = (
+        args_cli.resume
+        and os.environ.get("WANDB_RUN_ID")
+        and wandb_resume_mode in {"allow", "must", "auto"}
+        and getattr(agent_cfg, "load_run", None)
+    )
+    if shared_wandb_resume:
+        resume_log_dir = os.path.join(log_root_path, agent_cfg.load_run)
+        if os.path.isdir(resume_log_dir):
+            log_dir = resume_log_dir
+            print(f"[INFO] Reusing log directory for resumed W&B run: {log_dir}")
+
+        # rsl_rl writes runner/policy/algorithm config with wandb.config.update().
+        # For two-stage resume into the same run id, these values intentionally
+        # change between stages, so allow value changes for store_config updates.
+        try:
+            from rsl_rl.utils import wandb_utils as _wandb_utils
+
+            def _store_config_allow_val_change(
+                self, env_cfg, runner_cfg, alg_cfg, policy_cfg
+            ):
+                _wandb_utils.wandb.config.update(
+                    {"runner_cfg": runner_cfg}, allow_val_change=True
+                )
+                _wandb_utils.wandb.config.update(
+                    {"policy_cfg": policy_cfg}, allow_val_change=True
+                )
+                _wandb_utils.wandb.config.update(
+                    {"alg_cfg": alg_cfg}, allow_val_change=True
+                )
+                try:
+                    _wandb_utils.wandb.config.update(
+                        {"env_cfg": env_cfg.to_dict()}, allow_val_change=True
+                    )
+                except Exception:
+                    _wandb_utils.wandb.config.update(
+                        {"env_cfg": _wandb_utils.asdict(env_cfg)}, allow_val_change=True
+                    )
+
+            _wandb_utils.WandbSummaryWriter.store_config = (
+                _store_config_allow_val_change
+            )
+            print("[INFO] Enabled allow_val_change for resumed W&B config updates")
+        except Exception as err:
+            print(f"[WARNING] Failed to patch resumed W&B config behavior: {err}")
 
     # set the IO descriptors export flag if requested
     if isinstance(env_cfg, ManagerBasedRLEnvCfg):
@@ -206,7 +382,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     env_cfg.log_dir = log_dir
 
     # create isaac environment
-    env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
+    env = gym.make(
+        args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None
+    )
 
     # ROS2 bridge adapter setup for ROS2 command tasks.
     ros2_bridge_adapter = None
@@ -218,7 +396,10 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
             simulation_app.update()
             _logger.debug("isaacsim.ros2.bridge extension enabled")
 
-            from robot_lab.ros2_bridge import Ros2TwistBridgeCfg, Ros2TwistSubscriberGraphAdapter
+            from robot_lab.ros2_bridge import (
+                Ros2TwistBridgeCfg,
+                Ros2TwistSubscriberGraphAdapter,
+            )
 
             bridge_cfg = Ros2TwistBridgeCfg(
                 topic_name="/go1/cmd_vel",
@@ -234,7 +415,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
             ros2_bridge_adapter.attach(env)
 
             if bridge_cfg.startup_mode == "startup_blocking":
-                success = ros2_bridge_adapter.wait_for_first_message(timeout_s=bridge_cfg.startup_timeout_s)
+                success = ros2_bridge_adapter.wait_for_first_message(
+                    timeout_s=bridge_cfg.startup_timeout_s
+                )
                 if not success:
                     print(
                         f"[WARNING] ROS2 bridge: No message received within "
@@ -251,7 +434,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # save resume path before creating a new log_dir
     if agent_cfg.resume or agent_cfg.algorithm.class_name == "Distillation":
-        resume_path = get_checkpoint_path(log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint)
+        resume_path = get_checkpoint_path(
+            log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint
+        )
 
     # wrap for video recording
     if args_cli.video:
@@ -272,9 +457,13 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # create runner from rsl-rl
     if agent_cfg.class_name == "OnPolicyRunner":
-        runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device)
+        runner = OnPolicyRunner(
+            env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device
+        )
     elif agent_cfg.class_name == "DistillationRunner":
-        runner = DistillationRunner(env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device)
+        runner = DistillationRunner(
+            env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device
+        )
     else:
         raise ValueError(f"Unsupported runner class: {agent_cfg.class_name}")
     # write git state to logs
@@ -307,7 +496,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # run training
     try:
-        runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
+        runner.learn(
+            num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True
+        )
     finally:
         print(f"Training time: {round(time.time() - start_time, 2)} seconds")
 

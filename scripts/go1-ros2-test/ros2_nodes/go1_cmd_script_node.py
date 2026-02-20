@@ -23,6 +23,7 @@ import time
 import rclpy
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 
 
 class Go1CmdScriptNode(Node):
@@ -37,10 +38,30 @@ class Go1CmdScriptNode(Node):
         vy: float,
         wz: float,
         duration: float,
+        qos_reliability: str,
+        qos_durability: str,
+        qos_history_depth: int,
     ):
         super().__init__("go1_cmd_script_node")
 
-        self._publisher = self.create_publisher(Twist, topic, 10)
+        reliability_policy = (
+            ReliabilityPolicy.BEST_EFFORT
+            if qos_reliability == "best_effort"
+            else ReliabilityPolicy.RELIABLE
+        )
+        durability_policy = (
+            DurabilityPolicy.TRANSIENT_LOCAL
+            if qos_durability == "transient_local"
+            else DurabilityPolicy.VOLATILE
+        )
+        qos_profile = QoSProfile(
+            history=HistoryPolicy.KEEP_LAST,
+            depth=max(1, qos_history_depth),
+            reliability=reliability_policy,
+            durability=durability_policy,
+        )
+
+        self._publisher = self.create_publisher(Twist, topic, qos_profile)
         self._timer = self.create_timer(1.0 / rate, self._timer_callback)
 
         self._profile = profile
@@ -55,13 +76,19 @@ class Go1CmdScriptNode(Node):
             f"Go1CmdScriptNode started: topic={topic}, rate={rate}Hz, "
             f"profile={profile}, vx={vx}, vy={vy}, wz={wz}, duration={duration}"
         )
+        self.get_logger().info(
+            "QoS: "
+            f"reliability={qos_reliability}, durability={qos_durability}, depth={max(1, qos_history_depth)}"
+        )
 
     def _timer_callback(self):
         elapsed = time.time() - self._start_time
 
         # Check duration limit
         if math.isfinite(self._duration) and elapsed >= self._duration:
-            self.get_logger().info(f"Duration {self._duration}s reached, shutting down.")
+            self.get_logger().info(
+                f"Duration {self._duration}s reached, shutting down."
+            )
             raise SystemExit(0)
 
         vx, vy, wz = self._compute_command(elapsed)
@@ -106,9 +133,15 @@ class Go1CmdScriptNode(Node):
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Go1 scripted ROS2 velocity command publisher.")
-    parser.add_argument("--topic", type=str, default="/go1/cmd_vel", help="ROS2 topic name")
-    parser.add_argument("--rate", type=float, default=20.0, help="Publish frequency in Hz")
+    parser = argparse.ArgumentParser(
+        description="Go1 scripted ROS2 velocity command publisher."
+    )
+    parser.add_argument(
+        "--topic", type=str, default="/go1/cmd_vel", help="ROS2 topic name"
+    )
+    parser.add_argument(
+        "--rate", type=float, default=20.0, help="Publish frequency in Hz"
+    )
     parser.add_argument(
         "--profile",
         type=str,
@@ -118,12 +151,34 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--vx", type=float, default=0.5, help="Forward velocity (m/s)")
     parser.add_argument("--vy", type=float, default=0.0, help="Lateral velocity (m/s)")
-    parser.add_argument("--wz", type=float, default=0.0, help="Yaw angular velocity (rad/s)")
+    parser.add_argument(
+        "--wz", type=float, default=0.0, help="Yaw angular velocity (rad/s)"
+    )
     parser.add_argument(
         "--duration",
         type=float,
         default=float("inf"),
         help="Run duration in seconds (default: inf = run forever)",
+    )
+    parser.add_argument(
+        "--qos_reliability",
+        type=str,
+        default="reliable",
+        choices=["best_effort", "reliable"],
+        help="ROS2 publisher reliability QoS",
+    )
+    parser.add_argument(
+        "--qos_durability",
+        type=str,
+        default="volatile",
+        choices=["volatile", "transient_local"],
+        help="ROS2 publisher durability QoS",
+    )
+    parser.add_argument(
+        "--qos_history_depth",
+        type=int,
+        default=5,
+        help="ROS2 publisher queue depth",
     )
     return parser.parse_args()
 
@@ -140,6 +195,9 @@ def main():
         vy=args.vy,
         wz=args.wz,
         duration=args.duration,
+        qos_reliability=args.qos_reliability,
+        qos_durability=args.qos_durability,
+        qos_history_depth=args.qos_history_depth,
     )
 
     try:

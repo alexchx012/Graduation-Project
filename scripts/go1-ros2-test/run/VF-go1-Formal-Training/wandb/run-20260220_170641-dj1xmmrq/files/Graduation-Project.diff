@@ -1,0 +1,500 @@
+--- git status ---
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_ros2_cmd_node.sh
+	modified:   scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_vf_go1_formal_training.ps1
+	modified:   scripts/go1-ros2-test/train.py
+	modified:   src/go1-ros2-test/ros2_bridge/twist_subscriber_graph.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	configs/ros2/
+	docs/daily_logs/2026-02-20/
+	nul
+	scripts/go1-ros2-test/run/Debug-ROS2-Test/
+	scripts/go1-ros2-test/run/VF-go1-Formal-Training/wandb/
+	wandb/run-20260220_164448-yenxdgo5/
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_ros2_cmd_node.sh b/scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_ros2_cmd_node.sh
+index 1af6366..3cbfaff 100644
+--- a/scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_ros2_cmd_node.sh
++++ b/scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_ros2_cmd_node.sh
+@@ -1,14 +1,30 @@
+-﻿#!/bin/bash
++#!/bin/bash
+ # Formal ROS2 command publisher for Go1 vx=1.0 tracking.
+ 
+-set -euo pipefail
+-
+-source /opt/ros/humble/setup.bash
++set -eo pipefail
+ 
+ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+ 
+-python3 "${PROJECT_ROOT}/scripts/go1-ros2-test/ros2_nodes/go1_cmd_script_node.py" \
++# Keep ROS2 runtime aligned with Windows-side Isaac Sim bridge.
++export ROS_DOMAIN_ID=0
++export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
++export FASTDDS_BUILTIN_TRANSPORTS=UDPv4
++export FASTRTPS_DEFAULT_PROFILES_FILE="${PROJECT_ROOT}/configs/ros2/fastrtps_wsl_to_win.xml"
++export FASTDDS_DEFAULT_PROFILES_FILE="${FASTRTPS_DEFAULT_PROFILES_FILE}"
++
++echo "[FORMAL ROS2] ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"
++echo "[FORMAL ROS2] RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION}"
++echo "[FORMAL ROS2] FASTDDS_BUILTIN_TRANSPORTS=${FASTDDS_BUILTIN_TRANSPORTS}"
++echo "[FORMAL ROS2] FASTRTPS_DEFAULT_PROFILES_FILE=${FASTRTPS_DEFAULT_PROFILES_FILE}"
++
++set +u
++source /opt/ros/humble/setup.bash
++set -u
++
++echo "[FORMAL ROS2] python: $(command -v /usr/bin/python3)"
++
++/usr/bin/python3 "${PROJECT_ROOT}/scripts/go1-ros2-test/ros2_nodes/go1_cmd_script_node.py" \
+   --profile constant \
+   --vx 1.0 \
+   --vy 0.0 \
+diff --git a/scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_vf_go1_formal_training.ps1 b/scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_vf_go1_formal_training.ps1
+index ee1d2a6..10514c8 100644
+--- a/scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_vf_go1_formal_training.ps1
++++ b/scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_vf_go1_formal_training.ps1
+@@ -25,8 +25,7 @@ $ErrorActionPreference = "Stop"
+ 
+ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+ $ProjectRoot = (Resolve-Path (Join-Path $ScriptDir "..\..\..\.." )).Path
+-$Timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+-$EffectiveRunName = "vf_go1_formal_${Timestamp}"
++$EffectiveRunName = "vf_go1_formal"
+ 
+ Write-Host "============================================"
+ Write-Host "  VF Go1 Formal Training (ROS2Cmd)"
+@@ -43,7 +42,8 @@ Write-Host "  Project   : go1-flat-locomotion"
+ Write-Host "  RunName   : $EffectiveRunName"
+ Write-Host "============================================"
+ 
+-$WslProjectRoot = wsl -d Ubuntu-22.04 wslpath -u "$ProjectRoot"
++$ProjectRootForward = $ProjectRoot -replace '\\', '/'
++$WslProjectRoot = (wsl -d Ubuntu-22.04 bash -c "wslpath -u '$ProjectRootForward'").Trim()
+ $WslRos2Script = "${WslProjectRoot}/scripts/go1-ros2-test/run/VF-go1-Formal-Training/run_ros2_cmd_node.sh"
+ $WslRos2Args = "--profile $Profile --vx $Vx --vy $Vy --wz $Wz --rate $Rate"
+ 
+@@ -53,12 +53,12 @@ try {
+     Write-Host ""
+     Write-Host "[Step 1/4] Starting WSL ROS2 command node (background)..."
+ 
+-    $WslCommand = "bash `"$WslRos2Script`" $WslRos2Args"
+-    Write-Host "  CMD: wsl -d Ubuntu-22.04 bash -lc `"$WslCommand`""
++    $WslCommand = "cd '$WslProjectRoot' && bash '$WslRos2Script' $WslRos2Args"
++    Write-Host "  CMD: wsl -d Ubuntu-22.04 bash -c `"$WslCommand`""
+ 
+     $WslProcess = Start-Process -FilePath "wsl" `
+-        -ArgumentList "-d", "Ubuntu-22.04", "bash", "-lc", $WslCommand `
+-        -PassThru -NoNewWindow
++        -ArgumentList "-d", "Ubuntu-22.04", "bash", "-c", $WslCommand `
++        -PassThru -WindowStyle Hidden
+ 
+     Write-Host "  WSL PID: $($WslProcess.Id)"
+ 
+@@ -66,11 +66,19 @@ try {
+     Write-Host "[Step 2/4] Waiting 5 seconds for ROS2 stabilization..."
+     Start-Sleep -Seconds 5
+ 
++    $PublisherPid = (wsl -d Ubuntu-22.04 bash -lc "pgrep -f go1_cmd_script_node.py | head -n 1" 2>$null).Trim()
++    if ([string]::IsNullOrWhiteSpace($PublisherPid)) {
++        Write-Host "[ERROR] WSL ROS2 node is not running (go1_cmd_script_node.py not found)."
++        exit 1
++    }
++
+     if ($WslProcess.HasExited) {
+         Write-Host "[ERROR] WSL ROS2 node exited prematurely (exit code: $($WslProcess.ExitCode))"
+         exit 1
+     }
+ 
++    Write-Host "  ROS2 publisher PID (WSL): $PublisherPid"
++
+     Write-Host ""
+     Write-Host "[Step 3/4] Starting Isaac Lab formal training..."
+ 
+diff --git a/scripts/go1-ros2-test/train.py b/scripts/go1-ros2-test/train.py
+index 3656e07..233b2f0 100644
+--- a/scripts/go1-ros2-test/train.py
++++ b/scripts/go1-ros2-test/train.py
+@@ -23,22 +23,55 @@ import cli_args  # isort: skip
+ 
+ # add argparse arguments
+ parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
+-parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
+-parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
+-parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
+-parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
++parser.add_argument(
++    "--video", action="store_true", default=False, help="Record videos during training."
++)
++parser.add_argument(
++    "--video_length",
++    type=int,
++    default=200,
++    help="Length of the recorded video (in steps).",
++)
++parser.add_argument(
++    "--video_interval",
++    type=int,
++    default=2000,
++    help="Interval between video recordings (in steps).",
++)
++parser.add_argument(
++    "--num_envs", type=int, default=None, help="Number of environments to simulate."
++)
+ parser.add_argument("--task", type=str, default=None, help="Name of the task.")
+ parser.add_argument(
+-    "--agent", type=str, default="rsl_rl_cfg_entry_point", help="Name of the RL agent configuration entry point."
++    "--agent",
++    type=str,
++    default="rsl_rl_cfg_entry_point",
++    help="Name of the RL agent configuration entry point.",
++)
++parser.add_argument(
++    "--seed", type=int, default=None, help="Seed used for the environment"
++)
++parser.add_argument(
++    "--max_iterations", type=int, default=None, help="RL Policy training iterations."
++)
++parser.add_argument(
++    "--distributed",
++    action="store_true",
++    default=False,
++    help="Run training with multiple GPUs or nodes.",
+ )
+-parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
+-parser.add_argument("--max_iterations", type=int, default=None, help="RL Policy training iterations.")
+ parser.add_argument(
+-    "--distributed", action="store_true", default=False, help="Run training with multiple GPUs or nodes."
++    "--export_io_descriptors",
++    action="store_true",
++    default=False,
++    help="Export IO descriptors.",
+ )
+-parser.add_argument("--export_io_descriptors", action="store_true", default=False, help="Export IO descriptors.")
+ parser.add_argument(
+-    "--ray-proc-id", "-rid", type=int, default=None, help="Automatically configured by Ray integration, otherwise None."
++    "--ray-proc-id",
++    "-rid",
++    type=int,
++    default=None,
++    help="Automatically configured by Ray integration, otherwise None.",
+ )
+ # append RSL-RL cli arguments
+ cli_args.add_rsl_rl_args(parser)
+@@ -68,7 +101,9 @@ if args_cli.task in _ROS2_TASK_IDS and sys.platform == "win32":
+     try:
+         import ctypes
+ 
+-        ctypes.windll.kernel32.SetErrorMode(0x0001 | 0x0002)  # SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX
++        ctypes.windll.kernel32.SetErrorMode(
++            0x0001 | 0x0002
++        )  # SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX
+     except Exception:
+         pass
+ 
+@@ -76,19 +111,47 @@ if args_cli.task in _ROS2_TASK_IDS and sys.platform == "win32":
+     if ros_distro not in {"humble", "jazzy"}:
+         ros_distro = "humble"
+     os.environ["ROS_DISTRO"] = ros_distro
++    # CRITICAL: Set ROS_DOMAIN_ID=0 to match WSL side for DDS discovery
++    os.environ.setdefault("ROS_DOMAIN_ID", "0")
+     os.environ.setdefault("RMW_IMPLEMENTATION", "rmw_fastrtps_cpp")
++    # NOTE: Do NOT set ROS_LOCALHOST_ONLY - it conflicts with FastRTPS XML unicast config
++    # when using actual IP addresses (192.168.0.104) for Windows-WSL2 communication
++
++    # Force UDP transport; do not use SHM across the Windows/WSL boundary.
++    os.environ.setdefault("FASTDDS_BUILTIN_TRANSPORTS", "UDPv4")
++
++    # FastRTPS unicast config for Windows <-> WSL2 communication
++    script_dir = os.path.dirname(os.path.abspath(__file__))
++    project_root = os.path.dirname(os.path.dirname(script_dir))
++    fastrtps_config = os.path.join(
++        project_root, "configs", "ros2", "fastrtps_win_to_wsl.xml"
++    )
++    if os.path.isfile(fastrtps_config):
++        os.environ.setdefault("FASTRTPS_DEFAULT_PROFILES_FILE", fastrtps_config)
++        os.environ.setdefault("FASTDDS_DEFAULT_PROFILES_FILE", fastrtps_config)
++        print(f"[ROS2] Using FastRTPS config: {fastrtps_config}")
++    else:
++        print(f"[WARNING] FastRTPS config not found: {fastrtps_config}")
+ 
+     isaacsim_root = os.environ.get("ISAACSIM_PATH")
+     if isaacsim_root:
+-        ros_lib_dir = os.path.join(isaacsim_root, "exts", "isaacsim.ros2.bridge", ros_distro, "lib")
++        ros_lib_dir = os.path.join(
++            isaacsim_root, "exts", "isaacsim.ros2.bridge", ros_distro, "lib"
++        )
+         if os.path.isdir(ros_lib_dir):
+             path_entries = [p for p in os.environ.get("PATH", "").split(";") if p]
+             if ros_lib_dir not in path_entries:
+-                os.environ["PATH"] = ";".join(path_entries + [ros_lib_dir]) if path_entries else ros_lib_dir
++                os.environ["PATH"] = (
++                    ";".join(path_entries + [ros_lib_dir])
++                    if path_entries
++                    else ros_lib_dir
++                )
+         else:
+             print(f"[WARNING] ROS2 bridge library directory not found: {ros_lib_dir}")
+     else:
+-        print("[WARNING] ISAACSIM_PATH not set; cannot preconfigure ROS2 bridge library path")
++        print(
++            "[WARNING] ISAACSIM_PATH not set; cannot preconfigure ROS2 bridge library path"
++        )
+ 
+ """Check for minimum supported RSL-RL version."""
+ 
+@@ -101,9 +164,23 @@ RSL_RL_VERSION = "3.0.1"
+ installed_version = metadata.version("rsl-rl-lib")
+ if version.parse(installed_version) < version.parse(RSL_RL_VERSION):
+     if platform.system() == "Windows":
+-        cmd = [r".\isaaclab.bat", "-p", "-m", "pip", "install", f"rsl-rl-lib=={RSL_RL_VERSION}"]
++        cmd = [
++            r".\isaaclab.bat",
++            "-p",
++            "-m",
++            "pip",
++            "install",
++            f"rsl-rl-lib=={RSL_RL_VERSION}",
++        ]
+     else:
+-        cmd = ["./isaaclab.sh", "-p", "-m", "pip", "install", f"rsl-rl-lib=={RSL_RL_VERSION}"]
++        cmd = [
++            "./isaaclab.sh",
++            "-p",
++            "-m",
++            "pip",
++            "install",
++            f"rsl-rl-lib=={RSL_RL_VERSION}",
++        ]
+     print(
+         f"Please install the correct version of RSL-RL.\nExisting version is: '{installed_version}'"
+         f" and required version is: '{RSL_RL_VERSION}'.\nTo install the correct version, run:"
+@@ -152,21 +229,34 @@ torch.backends.cudnn.benchmark = False
+ 
+ 
+ @hydra_task_config(args_cli.task, args_cli.agent)
+-def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agent_cfg: RslRlBaseRunnerCfg):
++def main(
++    env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg,
++    agent_cfg: RslRlBaseRunnerCfg,
++):
+     """Train with RSL-RL agent."""
+     # override configurations with non-hydra CLI arguments
+     agent_cfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
+-    env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
++    env_cfg.scene.num_envs = (
++        args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
++    )
+     agent_cfg.max_iterations = (
+-        args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
++        args_cli.max_iterations
++        if args_cli.max_iterations is not None
++        else agent_cfg.max_iterations
+     )
+ 
+     # set the environment seed
+     # note: certain randomizations occur in the environment initialization so we set the seed here
+     env_cfg.seed = agent_cfg.seed
+-    env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
++    env_cfg.sim.device = (
++        args_cli.device if args_cli.device is not None else env_cfg.sim.device
++    )
+     # check for invalid combination of CPU device with distributed training
+-    if args_cli.distributed and args_cli.device is not None and "cpu" in args_cli.device:
++    if (
++        args_cli.distributed
++        and args_cli.device is not None
++        and "cpu" in args_cli.device
++    ):
+         raise ValueError(
+             "Distributed training is not supported when using CPU device. "
+             "Please use GPU device (e.g., --device cuda) for distributed training."
+@@ -206,7 +296,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
+     env_cfg.log_dir = log_dir
+ 
+     # create isaac environment
+-    env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
++    env = gym.make(
++        args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None
++    )
+ 
+     # ROS2 bridge adapter setup for ROS2 command tasks.
+     ros2_bridge_adapter = None
+@@ -218,7 +310,10 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
+             simulation_app.update()
+             _logger.debug("isaacsim.ros2.bridge extension enabled")
+ 
+-            from robot_lab.ros2_bridge import Ros2TwistBridgeCfg, Ros2TwistSubscriberGraphAdapter
++            from robot_lab.ros2_bridge import (
++                Ros2TwistBridgeCfg,
++                Ros2TwistSubscriberGraphAdapter,
++            )
+ 
+             bridge_cfg = Ros2TwistBridgeCfg(
+                 topic_name="/go1/cmd_vel",
+@@ -234,7 +329,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
+             ros2_bridge_adapter.attach(env)
+ 
+             if bridge_cfg.startup_mode == "startup_blocking":
+-                success = ros2_bridge_adapter.wait_for_first_message(timeout_s=bridge_cfg.startup_timeout_s)
++                success = ros2_bridge_adapter.wait_for_first_message(
++                    timeout_s=bridge_cfg.startup_timeout_s
++                )
+                 if not success:
+                     print(
+                         f"[WARNING] ROS2 bridge: No message received within "
+@@ -251,7 +348,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
+ 
+     # save resume path before creating a new log_dir
+     if agent_cfg.resume or agent_cfg.algorithm.class_name == "Distillation":
+-        resume_path = get_checkpoint_path(log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint)
++        resume_path = get_checkpoint_path(
++            log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint
++        )
+ 
+     # wrap for video recording
+     if args_cli.video:
+@@ -272,9 +371,13 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
+ 
+     # create runner from rsl-rl
+     if agent_cfg.class_name == "OnPolicyRunner":
+-        runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device)
++        runner = OnPolicyRunner(
++            env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device
++        )
+     elif agent_cfg.class_name == "DistillationRunner":
+-        runner = DistillationRunner(env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device)
++        runner = DistillationRunner(
++            env, agent_cfg.to_dict(), log_dir=log_dir, device=agent_cfg.device
++        )
+     else:
+         raise ValueError(f"Unsupported runner class: {agent_cfg.class_name}")
+     # write git state to logs
+@@ -307,7 +410,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
+ 
+     # run training
+     try:
+-        runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
++        runner.learn(
++            num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True
++        )
+     finally:
+         print(f"Training time: {round(time.time() - start_time, 2)} seconds")
+ 
+diff --git a/src/go1-ros2-test/ros2_bridge/twist_subscriber_graph.py b/src/go1-ros2-test/ros2_bridge/twist_subscriber_graph.py
+index 679ec60..f6b45bc 100644
+--- a/src/go1-ros2-test/ros2_bridge/twist_subscriber_graph.py
++++ b/src/go1-ros2-test/ros2_bridge/twist_subscriber_graph.py
+@@ -52,16 +52,29 @@ class Ros2TwistSubscriberAdapter:
+             return
+ 
+         try:
++            import os
+             import rclpy
+             from rclpy.node import Node
+             from geometry_msgs.msg import Twist
+ 
++            # Log ROS2 environment for debugging
++            ros_domain_id = os.environ.get("ROS_DOMAIN_ID", "0 (default)")
++            rmw_impl = os.environ.get("RMW_IMPLEMENTATION", "default")
++            ros_localhost = os.environ.get("ROS_LOCALHOST_ONLY", "0 (default)")
++            fastrtps_cfg = os.environ.get("FASTRTPS_DEFAULT_PROFILES_FILE", "none")
++            print(f"[ROS2 Bridge] ROS_DOMAIN_ID={ros_domain_id}, RMW_IMPLEMENTATION={rmw_impl}")
++            print(f"[ROS2 Bridge] ROS_LOCALHOST_ONLY={ros_localhost}")
++            print(f"[ROS2 Bridge] FASTRTPS_DEFAULT_PROFILES_FILE={fastrtps_cfg}")
++            print(f"[ROS2 Bridge] Subscribing to topic: {self.cfg.topic_name}")
++
+             # Initialize rclpy if not already done
+             if not rclpy.ok():
+                 rclpy.init()
++                print("[ROS2 Bridge] rclpy initialized")
+ 
+             # Create node
+             self._node = rclpy.create_node(f"isaac_twist_sub_{id(self)}")
++            print(f"[ROS2 Bridge] Node created: {self._node.get_name()}")
+ 
+             # Create subscription
+             self._subscription = self._node.create_subscription(
+@@ -70,6 +83,7 @@ class Ros2TwistSubscriberAdapter:
+                 self._twist_callback,
+                 self.cfg.queue_size,
+             )
++            print(f"[ROS2 Bridge] Subscription created for {self.cfg.topic_name}")
+ 
+             self._setup_done = True
+             _logger.debug(f"ROS2 rclpy subscriber created for topic: {self.cfg.topic_name}")
+@@ -82,6 +96,14 @@ class Ros2TwistSubscriberAdapter:
+         with self._lock:
+             self._last_cmd = [msg.linear.x, msg.linear.y, msg.angular.z]
+             self._last_rx_time = time.time()
++            # Debug: log first few messages
++            if not hasattr(self, "_msg_count"):
++                self._msg_count = 0
++            self._msg_count += 1
++            if self._msg_count <= 5:
++                print(
++                    f"[ROS2 Bridge] Received msg #{self._msg_count}: vx={msg.linear.x:.3f}, vy={msg.linear.y:.3f}, wz={msg.angular.z:.3f}"
++                )
+ 
+     def attach(self, env):
+         """Attach to env and register physics callback."""
+@@ -95,14 +117,14 @@ class Ros2TwistSubscriberAdapter:
+         if sim is None:
+             try:
+                 from isaacsim.core.api import get_current_simulation_context
++
+                 sim = get_current_simulation_context()
+             except ImportError:
+                 pass
+ 
+         if sim is None or not hasattr(sim, "add_physics_callback"):
+             raise RuntimeError(
+-                "Cannot find physics callback API. "
+-                "Expected env.unwrapped.sim.add_physics_callback() to be available."
++                "Cannot find physics callback API. Expected env.unwrapped.sim.add_physics_callback() to be available."
+             )
+ 
+         try:
+@@ -121,9 +143,13 @@ class Ros2TwistSubscriberAdapter:
+         # Spin once to process any pending messages (non-blocking)
+         try:
+             import rclpy
++
+             rclpy.spin_once(self._node, timeout_sec=0.0)
+-        except Exception:
+-            pass
++        except Exception as e:
++            # Debug: log spin errors
++            if not hasattr(self, "_spin_error_logged"):
++                print(f"[ROS2 Bridge] spin_once error: {e}")
++                self._spin_error_logged = True
+ 
+         # Copy latest command thread-safely
+         with self._lock:
+@@ -134,6 +160,13 @@ class Ros2TwistSubscriberAdapter:
+         setattr(unwrapped, self.cfg.command_attr, cmd)
+         setattr(unwrapped, self.cfg.command_stamp_attr, rx_time)
+ 
++        # Debug: log sync status periodically
++        if not hasattr(self, "_sync_count"):
++            self._sync_count = 0
++        self._sync_count += 1
++        if self._sync_count == 1 or self._sync_count == 100 or self._sync_count == 1000:
++            print(f"[ROS2 Bridge] Sync #{self._sync_count}: cmd={cmd}, rx_time={rx_time:.2f}")
++
+     def wait_for_first_message(self, timeout_s: float = 15.0) -> bool:
+         """Block until first non-zero command arrives or timeout."""
+         import rclpy

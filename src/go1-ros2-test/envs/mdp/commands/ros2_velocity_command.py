@@ -29,12 +29,28 @@ class Ros2VelocityCommand(CommandTerm):
         self._elapsed_time_s = 0.0
         self._last_rx_time_s = -math.inf
         self._last_source_stamp_s = -math.inf
+        self._zero_fallback_active = False
 
-        self.metrics["cmd_timeout_count"] = torch.zeros(self.num_envs, device=self.device)
-        self.metrics["cmd_zero_fallback_count"] = torch.zeros(self.num_envs, device=self.device)
+        # Backward-compatible metric name: cmd_timeout_count means "hold last command" steps.
+        self.metrics["cmd_hold_count"] = torch.zeros(self.num_envs, device=self.device)
+        self.metrics["cmd_timeout_count"] = torch.zeros(
+            self.num_envs, device=self.device
+        )
+        self.metrics["cmd_rx_stale_count"] = torch.zeros(
+            self.num_envs, device=self.device
+        )
+        self.metrics["cmd_zero_fallback_count"] = torch.zeros(
+            self.num_envs, device=self.device
+        )
+        self.metrics["cmd_zero_fallback_event_count"] = torch.zeros(
+            self.num_envs, device=self.device
+        )
+        self.metrics["cmd_age_s"] = torch.zeros(self.num_envs, device=self.device)
         self.metrics["cmd_vx"] = torch.zeros(self.num_envs, device=self.device)
         self.metrics["cmd_vy"] = torch.zeros(self.num_envs, device=self.device)
         self.metrics["cmd_wz"] = torch.zeros(self.num_envs, device=self.device)
+        self.metrics["vx_meas"] = torch.zeros(self.num_envs, device=self.device)
+        self.metrics["vx_abs_err"] = torch.zeros(self.num_envs, device=self.device)
 
     @property
     def command(self) -> torch.Tensor:
@@ -44,13 +60,19 @@ class Ros2VelocityCommand(CommandTerm):
     def reset(self, env_ids: Sequence[int] | None = None) -> dict[str, float]:
         """Reset metrics/state without invoking base resampling."""
         if env_ids is None:
-            env_ids_tensor = torch.arange(self.num_envs, device=self.device, dtype=torch.long)
+            env_ids_tensor = torch.arange(
+                self.num_envs, device=self.device, dtype=torch.long
+            )
         elif isinstance(env_ids, slice):
-            env_ids_tensor = torch.arange(self.num_envs, device=self.device, dtype=torch.long)[env_ids]
+            env_ids_tensor = torch.arange(
+                self.num_envs, device=self.device, dtype=torch.long
+            )[env_ids]
         elif isinstance(env_ids, torch.Tensor):
             env_ids_tensor = env_ids.to(device=self.device, dtype=torch.long).flatten()
         else:
-            env_ids_tensor = torch.tensor(list(env_ids), device=self.device, dtype=torch.long)
+            env_ids_tensor = torch.tensor(
+                list(env_ids), device=self.device, dtype=torch.long
+            )
 
         extras = {}
         if env_ids_tensor.numel() == 0:
@@ -82,23 +104,80 @@ class Ros2VelocityCommand(CommandTerm):
         self._elapsed_time_s += self._env.step_dt
         latest_cmd, has_new_cmd = self._read_latest_command()
         elapsed_since_rx = self._elapsed_time_s - self._last_rx_time_s
+        has_fresh_rx = (
+            math.isfinite(self._last_rx_time_s)
+            and elapsed_since_rx <= self.cfg.cmd_timeout_s
+        )
 
         if has_new_cmd:
             clipped = self._clip_command(latest_cmd)
             self._last_command.copy_(clipped)
             self._last_rx_time_s = self._elapsed_time_s
             self.vel_command_b[:, :] = clipped
+            self._zero_fallback_active = False
         elif elapsed_since_rx <= self.cfg.cmd_timeout_s:
             self.vel_command_b[:, :] = self._last_command
+            self.metrics["cmd_hold_count"] += 1.0
             self.metrics["cmd_timeout_count"] += 1.0
+            self._zero_fallback_active = False
         else:
             self.vel_command_b[:, :] = 0.0
             self.metrics["cmd_zero_fallback_count"] += 1.0
+            if not self._zero_fallback_active:
+                self.metrics["cmd_zero_fallback_event_count"] += 1.0
+                self._zero_fallback_active = True
+
+        if not has_fresh_rx:
+            self.metrics["cmd_rx_stale_count"] += 1.0
+
+        cmd_age_value = (
+            elapsed_since_rx
+            if math.isfinite(self._last_rx_time_s)
+            else self.cfg.cmd_timeout_s * 4.0
+        )
+        self.metrics["cmd_age_s"][:] = cmd_age_value
 
         # Record current command values for TensorBoard
         self.metrics["cmd_vx"][:] = self.vel_command_b[:, 0]
         self.metrics["cmd_vy"][:] = self.vel_command_b[:, 1]
         self.metrics["cmd_wz"][:] = self.vel_command_b[:, 2]
+
+        root_vx = self._get_root_lin_vel_x()
+        if root_vx is None:
+            self.metrics["vx_meas"][:] = 0.0
+            self.metrics["vx_abs_err"][:] = torch.abs(self.vel_command_b[:, 0])
+        else:
+            self.metrics["vx_meas"][:] = root_vx
+            self.metrics["vx_abs_err"][:] = torch.abs(
+                self.vel_command_b[:, 0] - root_vx
+            )
+
+    def _get_root_lin_vel_x(self) -> torch.Tensor | None:
+        holders = [self._env]
+        unwrapped = getattr(self._env, "unwrapped", None)
+        if unwrapped is not None and unwrapped is not self._env:
+            holders.append(unwrapped)
+
+        for holder in holders:
+            scene = getattr(holder, "scene", None)
+            if scene is None:
+                continue
+            try:
+                asset = scene["robot"]
+            except Exception:
+                continue
+
+            asset_data = getattr(asset, "data", None)
+            root_lin_vel_b = getattr(asset_data, "root_lin_vel_b", None)
+            if root_lin_vel_b is None:
+                continue
+
+            try:
+                return root_lin_vel_b[:, 0].to(device=self.device, dtype=torch.float32)
+            except Exception:
+                continue
+
+        return None
 
     def _read_latest_command(self) -> tuple[torch.Tensor, bool]:
         payload, holder = self._resolve_payload_and_holder()
@@ -116,7 +195,9 @@ class Ros2VelocityCommand(CommandTerm):
             # from a stale buffer that still holds the last command.
             clipped_no_stamp = self._clip_command(parsed_command)
             is_first_rx = not math.isfinite(self._last_rx_time_s)
-            is_changed = not torch.allclose(clipped_no_stamp, self._last_command, rtol=0.0, atol=1.0e-6)
+            is_changed = not torch.allclose(
+                clipped_no_stamp, self._last_command, rtol=0.0, atol=1.0e-6
+            )
             return clipped_no_stamp, (is_first_rx or is_changed)
 
         if source_stamp_s <= self._last_source_stamp_s:
@@ -136,7 +217,9 @@ class Ros2VelocityCommand(CommandTerm):
                 return getattr(holder, self.cfg.command_attr), holder
         return None, None
 
-    def _resolve_source_stamp_s(self, holder: Any | None, inline_stamp: Any | None) -> float | None:
+    def _resolve_source_stamp_s(
+        self, holder: Any | None, inline_stamp: Any | None
+    ) -> float | None:
         if inline_stamp is not None:
             return self._to_float(inline_stamp)
 
@@ -159,7 +242,10 @@ class Ros2VelocityCommand(CommandTerm):
             if len(payload) < 3:
                 return None, None
             try:
-                return torch.tensor([float(payload[0]), float(payload[1]), float(payload[2])], device=self.device), None
+                return torch.tensor(
+                    [float(payload[0]), float(payload[1]), float(payload[2])],
+                    device=self.device,
+                ), None
             except (TypeError, ValueError):
                 return None, None
 
@@ -175,20 +261,38 @@ class Ros2VelocityCommand(CommandTerm):
                 return None, None
 
             try:
-                cmd_tensor = torch.tensor([float(x), float(y), float(z)], device=self.device, dtype=torch.float32)
+                cmd_tensor = torch.tensor(
+                    [float(x), float(y), float(z)],
+                    device=self.device,
+                    dtype=torch.float32,
+                )
             except (TypeError, ValueError):
                 return None, None
 
-            stamp = self._first_present(payload, ("stamp_s", "timestamp_s", "time_s", "stamp"))
+            stamp = self._first_present(
+                payload, ("stamp_s", "timestamp_s", "time_s", "stamp")
+            )
             return cmd_tensor, stamp
 
         return None, None
 
     def _clip_command(self, cmd: torch.Tensor) -> torch.Tensor:
         clipped = cmd.to(device=self.device, dtype=torch.float32).clone()
-        clipped[0] = torch.clamp(clipped[0], min=self.cfg.ranges.lin_vel_x[0], max=self.cfg.ranges.lin_vel_x[1])
-        clipped[1] = torch.clamp(clipped[1], min=self.cfg.ranges.lin_vel_y[0], max=self.cfg.ranges.lin_vel_y[1])
-        clipped[2] = torch.clamp(clipped[2], min=self.cfg.ranges.ang_vel_z[0], max=self.cfg.ranges.ang_vel_z[1])
+        clipped[0] = torch.clamp(
+            clipped[0],
+            min=self.cfg.ranges.lin_vel_x[0],
+            max=self.cfg.ranges.lin_vel_x[1],
+        )
+        clipped[1] = torch.clamp(
+            clipped[1],
+            min=self.cfg.ranges.lin_vel_y[0],
+            max=self.cfg.ranges.lin_vel_y[1],
+        )
+        clipped[2] = torch.clamp(
+            clipped[2],
+            min=self.cfg.ranges.ang_vel_z[0],
+            max=self.cfg.ranges.ang_vel_z[1],
+        )
         return clipped
 
     @staticmethod
