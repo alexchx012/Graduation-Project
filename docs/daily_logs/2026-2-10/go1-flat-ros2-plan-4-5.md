@@ -513,7 +513,7 @@ ros2 topic pub /go1/cmd_vel geometry_msgs/msg/Twist \
 ```powershell
 # 终端 2 - Windows
 conda activate env_isaaclab
-cd C:\Users\SNight\Desktop\GP\Graduation-Project
+cd D:\Graduation-Project
 python scripts/reinforcement_learning/rsl_rl_ros2/train.py `
     --task Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-v0 `
     --num_envs 1 `

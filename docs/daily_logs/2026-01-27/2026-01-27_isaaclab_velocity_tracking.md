@@ -60,7 +60,7 @@
 - [2026-01-27 17:19:04] 计划:
   - 使用显式的 PYTHONPATH 重试训练，以便在使用 kit python 时可以导入 IsaacLab 包。
   - 要运行的命令 (PowerShell):
-    =\"C:\\Users\\SNight\\Desktop\\GP\\Graduation-Project\\IsaacLab\\source\\isaaclab;C:\\Users\\SNight\\Desktop\\GP\\Graduation-Project\\IsaacLab\\source\\isaaclab_assets;C:\\Users\\SNight\\Desktop\\GP\\Graduation-Project\\IsaacLab\\source\\isaaclab_rl;C:\\Users\\SNight\\Desktop\\GP\\Graduation-Project\\IsaacLab\\source\\isaaclab_tasks;C:\\Users\\SNight\\Desktop\\GP\\Graduation-Project\\IsaacLab\\source\\isaaclab_contrib;C:\\Users\\SNight\\Desktop\\GP\\Graduation-Project\\IsaacLab\\source\\isaaclab_mimic;\"; \
+    ="D:\Graduation-Project\IsaacLab\source\isaaclab;D:\Graduation-Project\IsaacLab\source\isaaclab_assets;D:\Graduation-Project\IsaacLab\source\isaaclab_rl;D:\Graduation-Project\IsaacLab\source\isaaclab_tasks;D:\Graduation-Project\IsaacLab\source\isaaclab_contrib;D:\Graduation-Project\IsaacLab\source\isaaclab_mimic;"; \
     .\\isaaclab.bat -p scripts\\reinforcement_learning\\rsl_rl\\train.py --task Isaac-Velocity-Flat-Unitree-Go1-v0 --headless --num_envs 64 --max_iterations 20 --seed 0
 - [2026-01-27 17:23:46] 命令:
   - (PowerShell) Set PYTHONPATH to IsaacLab source packages; run isaaclab.bat -p train.py ... (same as prior)

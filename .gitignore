@@ -3,9 +3,7 @@ logs/
 outputs/
 runs/
 checkpoints/
-IsaacLab/
-isaacsim/
-robot_lab/
+
 
 # 模型文件
 *.pt
@@ -21,3 +19,18 @@ robot_lab/
 __pycache__/
 *.pyc
 .pytest_cache/
+# Windows reserved device names (prevent accidental creation)
+nul
+NUL
+con
+CON
+aux
+AUX
+prn
+PRN
+
+# W&B local runs (large, auto-synced to cloud)
+wandb/
+IsaacLab
+isaacsim
+robot_lab

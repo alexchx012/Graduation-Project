@@ -147,7 +147,7 @@
 [2026-02-11 22:07:18] CMD: Get-Item "docs/daily_logs/2026-2-11/ros2cmd-smoke-latest.out.log","docs/daily_logs/2026-2-11/ros2cmd-smoke-latest.err.log" | Select-Object FullName,Length,LastWriteTime
 [2026-02-11 22:07:36] CMD: Get-Content -Path "docs/daily_logs/2026-2-11/ros2cmd-smoke-latest.err.log" -Tail 200
 [2026-02-11 22:07:55] CMD: rg -n "Time taken for scene creation|Completed setting up the environment|Failed to setup ROS2 bridge|Failed to create ROS2 subscriber graph|First ROS2 message received|Learning iteration|FileNotFoundError|Waiting for server response|omni.client.python" docs/daily_logs/2026-2-11/ros2cmd-smoke-latest.out.log -S
-[2026-02-11 22:08:44] CMD: cmd /c "call C:\Users\SNight\anaconda3\Scripts\activate.bat env_isaaclab && D:\IsaacLab\isaaclab.bat -p C:\Users\SNight\Desktop\GP\Graduation-Project\scripts\reinforcement_learning\rsl_rl_ros2\train.py --task Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-v0 --num_envs 1 --max_iterations 1 --headless"
+[2026-02-11 22:08:44] CMD: cmd /c "call C:\Users\SNight\anaconda3\Scripts\activate.bat env_isaaclab && D:\IsaacLab\isaaclab.bat -p D:\Graduation-Project\scripts\reinforcement_learning\rsl_rl_ros2\train.py --task Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-v0 --num_envs 1 --max_iterations 1 --headless"
 [2026-02-11 22:29:09] CMD: Get-Process | Where-Object { $_.ProcessName -match "python|isaac|kit|cmd|powershell" } | Select-Object ProcessName,Id,StartTime,CPU | Sort-Object StartTime
 [2026-02-11 22:29:27] CMD: Stop-Process -Id 20004,31820 -Force
 [2026-02-11 22:29:43] CMD: Get-ChildItem -Path "$env:LOCALAPPDATA/Temp/isaaclab/logs" -File | Sort-Object LastWriteTime -Descending | Select-Object -First 3 FullName,LastWriteTime,Length

@@ -36,7 +36,7 @@ WSL (Ubuntu 22.04)                    Windows (Isaac Lab)
 在 **Windows PowerShell** 中：
 
 ```powershell
-cd C:\Users\SNight\Desktop\GP\Graduation-Project
+cd D:\Graduation-Project
 
 # 最简运行：constant 命令，50 iter
 .\scripts\go1-ros2-test\run\run_go1_ros2_train.ps1

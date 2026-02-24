@@ -1,8 +1,8 @@
-Ôªø[INFO][AppLauncher]: Using device: cuda:0
+[INFO][AppLauncher]: Using device: cuda:0
 [INFO][AppLauncher]: Loading experience file: D:\IsaacLab\apps\isaaclab.python.headless.kit
 [INFO]: Parsing configuration from: robot_lab.tasks.manager_based.locomotion.velocity.config.quadruped.unitree_go1_ros2.flat_env_cfg:UnitreeGo1Ros2CmdFlatEnvCfg
 [INFO]: Parsing configuration from: isaaclab_tasks.manager_based.locomotion.velocity.config.go1.agents.rsl_rl_ppo_cfg:UnitreeGo1FlatPPORunnerCfg
-[INFO] Logging experiment in directory: C:\Users\SNight\Desktop\GP\Graduation-Project\logs\rsl_rl\unitree_go1_flat
+[INFO] Logging experiment in directory: D:\Graduation-Project\logs\rsl_rl\unitree_go1_flat
 Exact experiment name requested from command line: 2026-02-11_22-56-57
 
 [36m====================================================================================================================[0m
@@ -57,7 +57,7 @@ Loading user config located at: 'd:/isaaclab/_isaac_sim/kit/data/Kit/Isaac-Sim/5
 python : 2026-02-11T14:57:03Z [38,295ms] [Error] [gpu.foundation.plugin] Driver
 ShaderCacheManager::init() called with a different graphics interface, without 
 a shutdown()!
-ÊâÄÂú®‰ΩçÁΩÆ Ë°å:1 Â≠óÁ¨¶: 92
+À˘‘⁄Œª÷√ ––:1 ◊÷∑˚: 92
 + ... v_isaaclab; python scripts/reinforcement_learning/rsl_rl_ros2/train.p ...
 +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (2026-02-11T14:5...t a shutdown()! 
@@ -385,5 +385,5 @@ Metrics/base_velocity/cmd_zero_fallback_count: 0.0000
                                ETA: 00:00:02
 
 Could not find git repository in C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\rsl_rl\__init__.py. Skipping.
-Storing git diff for 'Graduation-Project' in: C:\Users\SNight\Desktop\GP\Graduation-Project\logs\rsl_rl\unitree_go1_flat\2026-02-11_22-56-57\git\Graduation-Project.diff
+Storing git diff for 'Graduation-Project' in: D:\Graduation-Project\logs\rsl_rl\unitree_go1_flat\2026-02-11_22-56-57\git\Graduation-Project.diff
 Training time: 4.99 seconds

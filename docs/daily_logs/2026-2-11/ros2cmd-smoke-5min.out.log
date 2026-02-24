@@ -2,7 +2,7 @@
 [INFO][AppLauncher]: Loading experience file: D:\IsaacLab\apps\isaaclab.python.headless.kit
 [INFO]: Parsing configuration from: robot_lab.tasks.manager_based.locomotion.velocity.config.quadruped.unitree_go1_ros2.flat_env_cfg:UnitreeGo1Ros2CmdFlatEnvCfg
 [INFO]: Parsing configuration from: isaaclab_tasks.manager_based.locomotion.velocity.config.go1.agents.rsl_rl_ppo_cfg:UnitreeGo1FlatPPORunnerCfg
-[INFO] Logging experiment in directory: C:\Users\SNight\Desktop\GP\Graduation-Project\logs\rsl_rl\unitree_go1_flat
+[INFO] Logging experiment in directory: D:\Graduation-Project\logs\rsl_rl\unitree_go1_flat
 Exact experiment name requested from command line: 2026-02-11_22-35-12
 
 [36m====================================================================================================================[0m
@@ -260,5 +260,5 @@ Metrics/base_velocity/cmd_zero_fallback_count: 0.0000
                                ETA: 00:00:02
 
 Could not find git repository in C:\Users\SNight\anaconda3\envs\env_isaaclab\Lib\site-packages\rsl_rl\__init__.py. Skipping.
-Storing git diff for 'Graduation-Project' in: C:\Users\SNight\Desktop\GP\Graduation-Project\logs\rsl_rl\unitree_go1_flat\2026-02-11_22-35-12\git\Graduation-Project.diff
+Storing git diff for 'Graduation-Project' in: D:\Graduation-Project\logs\rsl_rl\unitree_go1_flat\2026-02-11_22-35-12\git\Graduation-Project.diff
 Training time: 4.66 seconds
