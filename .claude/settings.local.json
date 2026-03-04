@@ -1,3 +1,11 @@
 {
-  "outputStyle": "Explanatory"
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "outputStyle": "Explanatory",
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)"
+    ]
+  }
 }

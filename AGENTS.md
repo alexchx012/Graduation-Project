@@ -29,12 +29,14 @@ Before starting any task in this workspace:
 * Don’t use “AI-ish” wording (prohibited: parallelism/rhetorical flourishes, opening with a rhetorical question, end-of-paragraph summaries; if deleting something doesn’t affect the whole, delete it).
 * Don’t flatter: would you say the same if someone else did the same thing? If you can’t produce a comparison sample, don’t praise.
 * Do only what is asked; you may suggest related work, but don’t take it upon yourself to do it.
+* Exception: Rule 6 (TDD) mandates writing tests even when the user only requests a feature; this is required process overhead, not scope creep.
 
 ### After fixing, verify (Rule 3)
 
 * If you changed code, run build/test; only say “fixed” if it passes.
 * If you changed A, grep all references to A and review all related code.
 * Debugging: first understand why it’s wrong → locate the issue → minimal fix → verify.
+* This rule applies to bug-fix scenarios. For new feature work, follow Rule 6's Red-Green-Refactor cycle instead.
 
 ### Distinguish facts from guesses (Rule 4)
 
@@ -45,6 +47,29 @@ Before starting any task in this workspace:
 
 * When corrected, answer three things: which assumption was wrong? what other conclusions are affected? how will you intercept it next time?
 
+### TDD Red-Green-Refactor (Rule 6)
+
+When adding or modifying functionality, follow the strict three-phase cycle:
+
+1. **Red** — Write a failing test first.
+   * The test must target the exact behavior to be added or changed.
+   * Run the test and confirm it **fails** for the expected reason (not an import error, typo, etc.).
+   * Do not write any production code in this phase.
+
+2. **Green** — Write the minimal production code to make the test pass.
+   * Change only what is necessary; do not anticipate future requirements.
+   * Run the test and confirm it **passes**.
+   * If other tests break, fix them before moving on.
+
+3. **Refactor** — Clean up while all tests stay green.
+   * Remove duplication, improve naming, simplify structure.
+   * Run the full related test suite after each refactor step; every run must pass.
+   * Do not add new behavior in this phase.
+
+Practical constraints for this project:
+* One cycle should produce a single, reviewable commit (or commit-sized chunk).
+* If a change is too small to justify a dedicated test (e.g., config-only YAML edits, doc updates), skip TDD but state explicitly: "TDD skipped — reason: …".
+* Simulation-dependent code that cannot be unit-tested locally should still have an integration-test stub marked `@pytest.mark.sim_required` so it is not silently forgotten.
 
 ## Conda Usage Rules (From Workspace Logs)
 
@@ -103,6 +128,7 @@ Notes:
 - If a new file is added under `src/go1-ros2-test/`, determine the robot_lab mirror
   path before the session ends and add it to the table above.
 - After syncing, grep the mirror file to confirm the diff is intentional (no stale code).
+- During a TDD cycle, sync the mirror **after the Refactor phase** (i.e., once per commit, not once per phase).
 
 ## Last Verified
 

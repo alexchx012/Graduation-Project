@@ -245,6 +245,14 @@ def main(
     env_cfg.curriculum.command_levels_lin_vel = None
     env_cfg.curriculum.command_levels_ang_vel = None
 
+    # Disable terrain curriculum so evaluation uses a fixed terrain distribution.
+    if getattr(env_cfg.curriculum, "terrain_levels", None) is not None:
+        env_cfg.curriculum.terrain_levels = None
+    if getattr(env_cfg.scene, "terrain", None) is not None:
+        terrain_gen = getattr(env_cfg.scene.terrain, "terrain_generator", None)
+        if terrain_gen is not None:
+            terrain_gen.curriculum = False
+
     # Resolve checkpoint path.
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
     log_root_path = os.path.abspath(log_root_path)
