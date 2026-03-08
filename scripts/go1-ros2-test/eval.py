@@ -112,6 +112,13 @@ simulation_app = app_launcher.app
 _ROS2_TASK_IDS = {
     "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-v0",
     "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-Play-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Play-v0",
+    # Phase 2 reward-weight variants
+    "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-TrackVelHigh-v0",
+    "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-TrackVelHigh-Play-v0",
+    "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-v0",
+    "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-Play-v0",
 }
 
 

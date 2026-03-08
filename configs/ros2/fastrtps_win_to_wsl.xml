@@ -2,14 +2,16 @@
 <!--
 Fast DDS profile for Windows (Isaac Sim subscriber) in WSL2 mirrored mode.
 
-Validated behavior on this machine:
-  - Windows -> WSL2 works via shared NIC IP (192.168.0.104)
-  - WSL2 -> Windows works via localhost (127.0.0.1)
+In mirrored networking mode, WSL2 shares the Windows network stack.
+Both sides can communicate via localhost (127.0.0.1).
 
-Therefore this profile:
+This profile:
   1) advertises Windows unicast locators on 127.0.0.1
-  2) probes WSL2 initial peers on 192.168.0.104
+  2) probes WSL2 initial peers on 127.0.0.1 (mirrored mode = same host)
   3) disables SHM by forcing UDPv4 transport only
+
+Updated 2026-03-08: Changed initialPeersList from stale 192.168.0.104 to
+127.0.0.1 to match mirrored mode topology.
 -->
 <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
     <transport_descriptors>
@@ -28,7 +30,7 @@ Therefore this profile:
             <useBuiltinTransports>false</useBuiltinTransports>
 
             <builtin>
-                <!-- WSL2 reaches Windows endpoint through localhost in mirrored mode. -->
+                <!-- Advertise metatraffic on localhost (reachable from WSL2 mirrored). -->
                 <metatrafficUnicastLocatorList>
                     <locator>
                         <udpv4>
@@ -38,14 +40,14 @@ Therefore this profile:
                     </locator>
                 </metatrafficUnicastLocatorList>
 
-                <!-- RTPS metatraffic unicast ports for participant IDs 0..5 on domain 0. -->
+                <!-- Probe WSL2 publisher on localhost (mirrored mode). -->
                 <initialPeersList>
-                    <locator><udpv4><address>192.168.0.104</address><port>7410</port></udpv4></locator>
-                    <locator><udpv4><address>192.168.0.104</address><port>7412</port></udpv4></locator>
-                    <locator><udpv4><address>192.168.0.104</address><port>7414</port></udpv4></locator>
-                    <locator><udpv4><address>192.168.0.104</address><port>7416</port></udpv4></locator>
-                    <locator><udpv4><address>192.168.0.104</address><port>7418</port></udpv4></locator>
-                    <locator><udpv4><address>192.168.0.104</address><port>7420</port></udpv4></locator>
+                    <locator><udpv4><address>127.0.0.1</address><port>7410</port></udpv4></locator>
+                    <locator><udpv4><address>127.0.0.1</address><port>7412</port></udpv4></locator>
+                    <locator><udpv4><address>127.0.0.1</address><port>7414</port></udpv4></locator>
+                    <locator><udpv4><address>127.0.0.1</address><port>7416</port></udpv4></locator>
+                    <locator><udpv4><address>127.0.0.1</address><port>7418</port></udpv4></locator>
+                    <locator><udpv4><address>127.0.0.1</address><port>7420</port></udpv4></locator>
                 </initialPeersList>
             </builtin>
 

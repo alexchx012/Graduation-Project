@@ -1,0 +1,23 @@
+{
+  "task": "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-Play-v0",
+  "checkpoint": "D:\\Graduation-Project\\logs\\rsl_rl\\unitree_go1_flat\\2026-03-08_21-26-05_variant_b_action_rate_high\\model_299.pt",
+  "eval_steps": 3000,
+  "warmup_steps": 300,
+  "effective_samples": 2700,
+  "target_vx": 1.0,
+  "mean_cmd_vx": 0.9725925925925926,
+  "mean_vx_meas": 0.5495906247550415,
+  "mean_vx_abs_err": 0.4618216149757306,
+  "p95_vx_abs_err": 0.9390057325363159,
+  "stable_ratio": 0.17888888716697693,
+  "stable_err_thresh": 0.15,
+  "mean_timeout_rate": 0.0,
+  "mean_base_contact_rate": 0.007037037037037037,
+  "elapsed_seconds": 193.4086048603058,
+  "pass": false,
+  "pass_criteria": {
+    "abs(mean_cmd_vx-target_vx)<=": 0.05,
+    "mean_vx_abs_err<=": 0.18,
+    "stable_ratio>=": 0.75
+  }
+}

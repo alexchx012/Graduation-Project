@@ -1,0 +1,23 @@
+{
+  "task": "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-TrackVelHigh-Play-v0",
+  "checkpoint": "D:\\Graduation-Project\\logs\\rsl_rl\\unitree_go1_flat\\2026-03-08_21-05-35_variant_a_track_vel_high\\model_299.pt",
+  "eval_steps": 3000,
+  "warmup_steps": 300,
+  "effective_samples": 2700,
+  "target_vx": 1.0,
+  "mean_cmd_vx": 0.9588888888888889,
+  "mean_vx_meas": 1.006820458664421,
+  "mean_vx_abs_err": 0.06766625117372584,
+  "p95_vx_abs_err": 0.1200152337551117,
+  "stable_ratio": 0.9503703713417053,
+  "stable_err_thresh": 0.15,
+  "mean_timeout_rate": 0.0011111111111111111,
+  "mean_base_contact_rate": 0.0,
+  "elapsed_seconds": 178.04421186447144,
+  "pass": true,
+  "pass_criteria": {
+    "abs(mean_cmd_vx-target_vx)<=": 0.05,
+    "mean_vx_abs_err<=": 0.18,
+    "stable_ratio>=": 0.75
+  }
+}
