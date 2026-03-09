@@ -5,15 +5,15 @@
 
 ## 前置状态确认
 
-| 条目 | 状态 | 说明 |
-| --- | --- | --- |
-| 阶段 0（Rough 闭环） | ✅ 完成 | Rough ROS2Cmd 任务已注册、smoke test 通过 |
-| 阶段 1（Flat+Rough baseline） | ✅ 完成 | 两组 baseline 训练+评估完成 |
-| Flat baseline checkpoint | ✅ | `logs/rsl_rl/unitree_go1_flat/2026-03-08_15-50-01_baseline_flat_ros2cmd` |
-| Rough baseline checkpoint | ✅ | `logs/rsl_rl/unitree_go1_rough/2026-03-08_16-46-27_baseline_rough_ros2cmd` |
-| `reward_engineering.md` 第 1-4 章 | ✅ 完成 | 383 行，含 baseline 数据解读 |
-| `reward_engineering.md` 第 5 章 | ❌ 未写 | **本阶段核心产出** |
-| `flat_env_cfg.py` | ✅ 干净 baseline | 无 reward 覆盖，仅替换 command source |
+| 条目                                | 状态             | 说明                                                                         |
+| ----------------------------------- | ---------------- | ---------------------------------------------------------------------------- |
+| 阶段 0（Rough 闭环）                | ✅ 完成          | Rough ROS2Cmd 任务已注册、smoke test 通过                                    |
+| 阶段 1（Flat+Rough baseline）       | ✅ 完成          | 两组 baseline 训练+评估完成                                                  |
+| Flat baseline checkpoint            | ✅               | `logs/rsl_rl/unitree_go1_flat/2026-03-08_15-50-01_baseline_flat_ros2cmd`   |
+| Rough baseline checkpoint           | ✅               | `logs/rsl_rl/unitree_go1_rough/2026-03-08_16-46-27_baseline_rough_ros2cmd` |
+| `reward_engineering.md` 第 1-4 章 | ✅ 完成          | 383 行，含 baseline 数据解读                                                 |
+| `reward_engineering.md` 第 5 章   | ❌ 未写          | **本阶段核心产出**                                                     |
+| `flat_env_cfg.py`                 | ✅ 干净 baseline | 无 reward 覆盖，仅替换 command source                                        |
 
 ## 阶段 2 总目标
 
@@ -24,10 +24,10 @@
 
 全部基于 Flat baseline（300 iters，网络 `[128,128,128]`），每次只改一个变量：
 
-| 变体 ID | 改动项 | baseline 值 | 变体值 | 假设 |
-| --- | --- | --- | --- | --- |
-| **A** | `track_lin_vel_xy_exp` | 1.5 | **3.5** | 提升速度跟踪权重 → 降低稳态误差 |
-| **B** | `action_rate_l2` | -0.01 | **-0.05** | 增大动作平滑惩罚 → 更平滑但可能响应变慢 |
+| 变体 ID     | 改动项                   | baseline 值 | 变体值          | 假设                                     |
+| ----------- | ------------------------ | ----------- | --------------- | ---------------------------------------- |
+| **A** | `track_lin_vel_xy_exp` | 1.5         | **3.5**   | 提升速度跟踪权重 → 降低稳态误差         |
+| **B** | `action_rate_l2`       | -0.01       | **-0.05** | 增大动作平滑惩罚 → 更平滑但可能响应变慢 |
 
 > 备选变体 C（`feet_air_time` 权重调整）视时间决定是否执行。
 
@@ -48,6 +48,7 @@
   - `UnitreeGo1Ros2CmdFlatEnvCfg_ActionRateHigh_PLAY`（评估）
 
 **关键实现细节**：
+
 ```python
 @configclass
 class UnitreeGo1Ros2CmdFlatEnvCfg_TrackVelHigh(UnitreeGo1Ros2CmdFlatEnvCfg):
@@ -61,11 +62,11 @@ class UnitreeGo1Ros2CmdFlatEnvCfg_TrackVelHigh(UnitreeGo1Ros2CmdFlatEnvCfg):
 
 修改 `src/go1-ros2-test/envs/__init__.py`，新增 4 个 gym 注册：
 
-| 任务 ID | 配置类 | PPO Runner |
-| --- | --- | --- |
-| `Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-TrackVelHigh-v0` | `_TrackVelHigh` | `FlatPPORunnerCfg` |
-| `Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-TrackVelHigh-Play-v0` | `_TrackVelHigh_PLAY` | `FlatPPORunnerCfg` |
-| `Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-v0` | `_ActionRateHigh` | `FlatPPORunnerCfg` |
+| 任务 ID                                                            | 配置类                   | PPO Runner           |
+| ------------------------------------------------------------------ | ------------------------ | -------------------- |
+| `Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-TrackVelHigh-v0`        | `_TrackVelHigh`        | `FlatPPORunnerCfg` |
+| `Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-TrackVelHigh-Play-v0`   | `_TrackVelHigh_PLAY`   | `FlatPPORunnerCfg` |
+| `Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-v0`      | `_ActionRateHigh`      | `FlatPPORunnerCfg` |
 | `Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-Play-v0` | `_ActionRateHigh_PLAY` | `FlatPPORunnerCfg` |
 
 > 全部使用 `UnitreeGo1FlatPPORunnerCfg`（与 baseline 一致，确保公平对比）。
@@ -78,16 +79,17 @@ class UnitreeGo1Ros2CmdFlatEnvCfg_TrackVelHigh(UnitreeGo1Ros2CmdFlatEnvCfg):
 
 按 `CLAUDE.md` File Sync Rules：
 
-| Source（先改） | Mirror（同步） |
-| --- | --- |
+| Source（先改）                                      | Mirror（同步）                                                                  |
+| --------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `src/go1-ros2-test/envs/flat_env_cfg_variants.py` | `robot_lab/.../unitree_go1_ros2/flat_env_cfg_variants.py`（**新文件**） |
-| `src/go1-ros2-test/envs/__init__.py` | `robot_lab/.../unitree_go1_ros2/__init__.py` |
+| `src/go1-ros2-test/envs/__init__.py`              | `robot_lab/.../unitree_go1_ros2/__init__.py`                                  |
 
 同步后在 `CLAUDE.md` 同步表新增 `flat_env_cfg_variants.py` 条目。
 
 ### 步骤 2.5：TDD — 集成测试桩
 
 新增 `tests/sim_required/test_go1_ros2cmd_flat_variants_registration.py`：
+
 - `@pytest.mark.sim_required`
 - 验证 4 个变体任务 ID 可被 gymnasium 解析注册
 - 验证变体配置类的 reward 权重确实与 baseline 不同
@@ -112,6 +114,7 @@ python scripts/go1-ros2-test/train.py --task Isaac-Velocity-Flat-Unitree-Go1-ROS
 ```
 
 **Smoke 通过标准**：
+
 - 训练不报错，产出 checkpoint
 - `params/env.yaml` 中目标 reward 权重与预期一致（A: `track_lin_vel_xy_exp=3.5`，B: `action_rate_l2=-0.05`）
 - 其余 reward 权重与 baseline 完全一致（One-factor 验证）
@@ -129,6 +132,7 @@ python scripts/go1-ros2-test/train.py --task Isaac-Velocity-Flat-Unitree-Go1-ROS
 ```
 
 W&B 命名规范：
+
 - 变体 A: `wandb_project=go1-flat-locomotion`，`run_name=variant_a_track_vel_high`
 - 变体 B: `wandb_project=go1-flat-locomotion`，`run_name=variant_b_action_rate_high`
 
@@ -146,15 +150,16 @@ python scripts/go1-ros2-test/eval.py --task Isaac-Velocity-Flat-Unitree-Go1-ROS2
 
 收集三组数据（baseline + 2 个变体），产出对比表：
 
-| 指标 | Baseline (1.5/-0.01) | 变体 A (3.5/-0.01) | 变体 B (1.5/-0.05) |
-| --- | --- | --- | --- |
-| 稳态 vx_abs_err | ~0.085 | ? | ? |
-| mean_vx_abs_err | 0.153 | ? | ? |
-| stable_ratio | 0.824 | ? | ? |
-| base_contact | ≈0 | ? | ? |
-| TensorBoard reward 曲线 | 基准 | 对比 | 对比 |
+| 指标                    | Baseline (1.5/-0.01) | 变体 A (3.5/-0.01) | 变体 B (1.5/-0.05) |
+| ----------------------- | -------------------- | ------------------ | ------------------ |
+| 稳态 vx_abs_err         | ~0.085               | ?                  | ?                  |
+| mean_vx_abs_err         | 0.153                | ?                  | ?                  |
+| stable_ratio            | 0.824                | ?                  | ?                  |
+| base_contact            | ≈0                  | ?                  | ?                  |
+| TensorBoard reward 曲线 | 基准                 | 对比               | 对比               |
 
 分析维度：
+
 1. 变体 A：速度跟踪是否明显改善？其他指标（力矩、平滑度）是否劣化？
 2. 变体 B：动作平滑度是否改善？速度跟踪是否受损？
 
@@ -163,6 +168,7 @@ python scripts/go1-ros2-test/eval.py --task Isaac-Velocity-Flat-Unitree-Go1-ROS2
 更新 `docs/reward_engineering.md`，新增第 5 章内容：
 
 **第 5 章：Reward 权重调优实验**
+
 - 5.1 实验方法论（One-factor-at-a-time）
 - 5.2 变体 A 分析：提升 `track_lin_vel_xy_exp`（1.5→3.5）
 - 5.3 变体 B 分析：增强 `action_rate_l2`（-0.01→-0.05）
@@ -203,15 +209,3 @@ python scripts/go1-ros2-test/eval.py --task Isaac-Velocity-Flat-Unitree-Go1-ROS2
 3. **One-factor-at-a-time**：每个变体只改一个 reward 权重，其余保持 baseline
 4. **TDD**：配置类需有 `@pytest.mark.sim_required` 集成测试桩
 5. **File Sync**：新增的 `flat_env_cfg_variants.py` 需在 CLAUDE.md 同步表登记
-
-## 预计时间
-
-| 步骤 | 预计耗时 |
-| --- | --- |
-| 2.1-2.5（代码+同步+测试） | 0.5 天 |
-| 2.6（smoke test） | 0.5 小时 |
-| 2.7（训练 A+B，可并行） | 0.5-1 天 |
-| 2.8-2.9（评估+分析） | 0.5 天 |
-| 2.10（撰写第 5 章） | 0.5 天 |
-| **合计** | **1-2 天** |
-

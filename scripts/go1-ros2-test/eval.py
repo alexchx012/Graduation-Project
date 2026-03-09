@@ -65,6 +65,12 @@ parser.add_argument(
     help="Target forward velocity used for pass/fail check.",
 )
 parser.add_argument(
+    "--pass_cmd_vx_tol",
+    type=float,
+    default=0.05,
+    help="Tolerance for abs(mean_cmd_vx - target_vx) pass check.",
+)
+parser.add_argument(
     "--pass_abs_err",
     type=float,
     default=0.1,
@@ -119,6 +125,11 @@ _ROS2_TASK_IDS = {
     "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-TrackVelHigh-Play-v0",
     "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-v0",
     "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-Play-v0",
+    # Phase 3 terrain-specific evaluation tasks
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Slope10-Play-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Slope20-Play-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Stairs10-Play-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Stairs15-Play-v0",
 }
 
 
@@ -435,12 +446,12 @@ def main(
     }
 
     summary["pass"] = bool(
-        abs(summary["mean_cmd_vx"] - args_cli.target_vx) <= 0.05
+        abs(summary["mean_cmd_vx"] - args_cli.target_vx) <= args_cli.pass_cmd_vx_tol
         and summary["mean_vx_abs_err"] <= args_cli.pass_abs_err
         and summary["stable_ratio"] >= args_cli.pass_stable_ratio
     )
     summary["pass_criteria"] = {
-        "abs(mean_cmd_vx-target_vx)<=": 0.05,
+        "abs(mean_cmd_vx-target_vx)<=": float(args_cli.pass_cmd_vx_tol),
         "mean_vx_abs_err<=": float(args_cli.pass_abs_err),
         "stable_ratio>=": float(args_cli.pass_stable_ratio),
     }

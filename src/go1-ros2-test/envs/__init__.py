@@ -118,3 +118,56 @@ gym.register(
         ),
     },
 )
+
+##
+# Phase 3 — Terrain-specific evaluation tasks (Play only).
+##
+
+_ROUGH_PPO_RUNNER = (
+    "isaaclab_tasks.manager_based.locomotion.velocity.config.go1.agents."
+    "rsl_rl_ppo_cfg:UnitreeGo1RoughPPORunnerCfg"
+)
+
+# Slope 10°
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Slope10-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_terrain_eval:UnitreeGo1Ros2CmdRoughEnvCfg_Slope10_PLAY",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+# Slope 20°
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Slope20-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_terrain_eval:UnitreeGo1Ros2CmdRoughEnvCfg_Slope20_PLAY",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+# Stairs 10cm
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Stairs10-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_terrain_eval:UnitreeGo1Ros2CmdRoughEnvCfg_Stairs10_PLAY",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+# Stairs 15cm (OOD)
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Stairs15-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_terrain_eval:UnitreeGo1Ros2CmdRoughEnvCfg_Stairs15_PLAY",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)

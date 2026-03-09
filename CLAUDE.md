@@ -122,6 +122,7 @@ Known sync pairs:
 | `src/go1-ros2-test/envs/flat_env_cfg.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg.py` |
 | `src/go1-ros2-test/envs/rough_env_cfg.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg.py` |
 | `src/go1-ros2-test/envs/flat_env_cfg_variants.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg_variants.py` |
+| `src/go1-ros2-test/envs/rough_env_cfg_terrain_eval.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg_terrain_eval.py` |
 | `src/go1-ros2-test/envs/__init__.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/__init__.py` |
 
 Notes:
