@@ -171,3 +171,70 @@ gym.register(
         "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
     },
 )
+
+##
+# Phase 4 — Domain Randomization variant tasks (DR ablation experiments).
+##
+
+# DR-Friction: randomize ground friction
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRFriction-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_dr_variants:UnitreeGo1Ros2CmdRoughEnvCfg_DRFriction",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRFriction-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_dr_variants:UnitreeGo1Ros2CmdRoughEnvCfg_DRFriction_PLAY",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+# DR-Mass: expanded base mass perturbation
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_dr_variants:UnitreeGo1Ros2CmdRoughEnvCfg_DRMass",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_dr_variants:UnitreeGo1Ros2CmdRoughEnvCfg_DRMass_PLAY",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+# DR-Push: re-enable external push perturbation
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_dr_variants:UnitreeGo1Ros2CmdRoughEnvCfg_DRPush",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+gym.register(
+    id="Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.rough_env_cfg_dr_variants:UnitreeGo1Ros2CmdRoughEnvCfg_DRPush_PLAY",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)

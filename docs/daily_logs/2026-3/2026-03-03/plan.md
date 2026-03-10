@@ -174,7 +174,7 @@ Rough 评估（使用放宽的通过标准）：
 python scripts/go1-ros2-test/eval.py --task Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Play-v0 --num_envs 64 --eval_steps 3000 --warmup_steps 300 --pass_abs_err 0.25 --pass_stable_ratio 0.7 --stable_err_thresh 0.2 --strict_pass
 ```
 
-> **v2 修订**：Rough 环境的通过标准必须放宽。在粗糙地形上速度跟踪误差天然更大，
+> Rough 环境的通过标准必须放宽。在粗糙地形上速度跟踪误差天然更大，
 > 使用 Flat 的标准（`abs_err≤0.1, stable_ratio≥0.9`）几乎必定失败。
 > 初版 Rough 标准：`abs_err≤0.25, stable_ratio≥0.7, stable_err_thresh=0.2`。
 > 待首次 baseline 训练完成后，根据实际数据校准这些阈值。
@@ -330,7 +330,7 @@ Go1 Rough baseline 的 DR 配置现状（需准确理解）：
 
 ### 4.4 时间说明
 
-每组参数 × 3 种子 × Rough 训练时长，总训练量显著增加。PPO 3 参数 × 2 候选 = 6 组 × 3 种子 = 18 次训练；DR 3 组 × 3 种子 = 9 次训练。合计 27 次 Rough 训练，需合理安排并行。预计 3-4 天（v1 估计 2 天偏乐观）。
+每组参数 × 3 种子 × Rough 训练时长，总训练量显著增加。PPO 3 参数 × 2 候选 = 6 组 × 3 种子 = 18 次训练；DR 3 组 × 3 种子 = 9 次训练。合计 27 次 Rough 训练，需合理安排并行。预计 3-4 天。
 
 ### 4.5 文档触发
 

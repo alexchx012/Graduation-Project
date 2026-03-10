@@ -52,21 +52,23 @@ Before starting any task in this workspace:
 When adding or modifying functionality, follow the strict three-phase cycle:
 
 1. **Red** — Write a failing test first.
+
    * The test must target the exact behavior to be added or changed.
    * Run the test and confirm it **fails** for the expected reason (not an import error, typo, etc.).
    * Do not write any production code in this phase.
-
 2. **Green** — Write the minimal production code to make the test pass.
+
    * Change only what is necessary; do not anticipate future requirements.
    * Run the test and confirm it **passes**.
    * If other tests break, fix them before moving on.
-
 3. **Refactor** — Clean up while all tests stay green.
+
    * Remove duplication, improve naming, simplify structure.
    * Run the full related test suite after each refactor step; every run must pass.
    * Do not add new behavior in this phase.
 
 Practical constraints for this project:
+
 * One cycle should produce a single, reviewable commit (or commit-sized chunk).
 * If a change is too small to justify a dedicated test (e.g., config-only YAML edits, doc updates), skip TDD but state explicitly: "TDD skipped — reason: …".
 * Simulation-dependent code that cannot be unit-tested locally should still have an integration-test stub marked `@pytest.mark.sim_required` so it is not silently forgotten.
@@ -114,24 +116,32 @@ After editing any file there, the corresponding file in
 
 Known sync pairs:
 
-| Source (edit here first) | Mirror (keep in sync) |
-|---|---|
-| `src/go1-ros2-test/ros2_bridge/twist_subscriber_graph.py` | `robot_lab/source/robot_lab/robot_lab/ros2_bridge/twist_subscriber_graph.py` |
-| `src/go1-ros2-test/ros2_bridge/__init__.py` | `robot_lab/source/robot_lab/robot_lab/ros2_bridge/__init__.py` |
-| `src/go1-ros2-test/envs/mdp/commands/ros2_velocity_command.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/mdp/ros2_velocity_command.py` |
-| `src/go1-ros2-test/envs/flat_env_cfg.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg.py` |
-| `src/go1-ros2-test/envs/rough_env_cfg.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg.py` |
-| `src/go1-ros2-test/envs/flat_env_cfg_variants.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg_variants.py` |
-| `src/go1-ros2-test/envs/rough_env_cfg_terrain_eval.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg_terrain_eval.py` |
-| `src/go1-ros2-test/envs/__init__.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/__init__.py` |
+| Source (edit here first)                                         | Mirror (keep in sync)                                                                                                                            |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/go1-ros2-test/ros2_bridge/twist_subscriber_graph.py`      | `robot_lab/source/robot_lab/robot_lab/ros2_bridge/twist_subscriber_graph.py`                                                                   |
+| `src/go1-ros2-test/ros2_bridge/__init__.py`                    | `robot_lab/source/robot_lab/robot_lab/ros2_bridge/__init__.py`                                                                                 |
+| `src/go1-ros2-test/envs/mdp/commands/ros2_velocity_command.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/mdp/ros2_velocity_command.py`                                    |
+| `src/go1-ros2-test/envs/flat_env_cfg.py`                       | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg.py`               |
+| `src/go1-ros2-test/envs/rough_env_cfg.py`                      | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg.py`              |
+| `src/go1-ros2-test/envs/flat_env_cfg_variants.py`              | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg_variants.py`      |
+| `src/go1-ros2-test/envs/rough_env_cfg_terrain_eval.py`         | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg_terrain_eval.py` |
+| `src/go1-ros2-test/envs/rough_env_cfg_dr_variants.py`          | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg_dr_variants.py`  |
+| `src/go1-ros2-test/envs/__init__.py`                           | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/__init__.py`                   |
 
 Notes:
+
 - `scripts/` and `configs/` are standalone runtime files with no counterparts in
   `robot_lab/`, `IsaacLab/`, or `Isaacsim/`; they do **not** need to be synced.
 - If a new file is added under `src/go1-ros2-test/`, determine the robot_lab mirror
   path before the session ends and add it to the table above.
 - After syncing, grep the mirror file to confirm the diff is intentional (no stale code).
 - During a TDD cycle, sync the mirror **after the Refactor phase** (i.e., once per commit, not once per phase).
+
+## Directory Isolation Rule
+
+`scripts/go1-ros2-test/` 和 `src/go1-ros2-test/` 仅存放**环境/任务的核心功能代码**。
+实验阶段的**独立批量脚本**（sweep、eval、smoke test 等通过 subprocess 调用 train.py/eval.py 的工具）
+严禁放入 `go1-ros2-test/` 目录树内，应放在 `scripts/phase4-ppo-dr/` 或 `docs/daily_logs/` 等独立路径下。
 
 ## Last Verified
 

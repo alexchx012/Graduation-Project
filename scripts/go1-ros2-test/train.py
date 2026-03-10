@@ -66,6 +66,19 @@ parser.add_argument(
     default=False,
     help="Disable ROS2-specific PPO hyper-parameter overrides for velocity tracking.",
 )
+# Phase 4 — PPO hyperparameter CLI overrides (OFAT experiments)
+parser.add_argument(
+    "--learning_rate", type=float, default=None,
+    help="Override PPO learning rate (applied AFTER ros2_tracking_tune).",
+)
+parser.add_argument(
+    "--clip_param", type=float, default=None,
+    help="Override PPO clip parameter.",
+)
+parser.add_argument(
+    "--entropy_coef", type=float, default=None,
+    help="Override PPO entropy coefficient (applied AFTER ros2_tracking_tune).",
+)
 parser.add_argument(
     "--export_io_descriptors",
     action="store_true",
@@ -107,6 +120,13 @@ _ROS2_TASK_IDS = {
     "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-TrackVelHigh-Play-v0",
     "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-v0",
     "Isaac-Velocity-Flat-Unitree-Go1-ROS2Cmd-ActionRateHigh-Play-v0",
+    # Phase 4 DR variants
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRFriction-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRFriction-Play-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-Play-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-Play-v0",
 }
 
 
@@ -286,6 +306,25 @@ def main(
             f"init_noise_std={agent_cfg.policy.init_noise_std}, "
             f"entropy_coef={agent_cfg.algorithm.entropy_coef}, "
             f"learning_rate={agent_cfg.algorithm.learning_rate}"
+        )
+
+    # Phase 4 — PPO hyperparameter CLI overrides (applied AFTER ros2_tracking_tune
+    # so that explicit CLI values always take priority)
+    _ppo_overridden = False
+    if args_cli.learning_rate is not None:
+        agent_cfg.algorithm.learning_rate = args_cli.learning_rate
+        _ppo_overridden = True
+    if args_cli.clip_param is not None:
+        agent_cfg.algorithm.clip_param = args_cli.clip_param
+        _ppo_overridden = True
+    if args_cli.entropy_coef is not None:
+        agent_cfg.algorithm.entropy_coef = args_cli.entropy_coef
+        _ppo_overridden = True
+    if _ppo_overridden:
+        print(
+            f"[PPO Override] lr={agent_cfg.algorithm.learning_rate}, "
+            f"clip={agent_cfg.algorithm.clip_param}, "
+            f"ent={agent_cfg.algorithm.entropy_coef}"
         )
 
     # set the environment seed

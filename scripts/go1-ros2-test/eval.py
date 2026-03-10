@@ -130,6 +130,13 @@ _ROS2_TASK_IDS = {
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Slope20-Play-v0",
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Stairs10-Play-v0",
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Stairs15-Play-v0",
+    # Phase 4 DR variants
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRFriction-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRFriction-Play-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-Play-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-v0",
+    "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-Play-v0",
 }
 
 

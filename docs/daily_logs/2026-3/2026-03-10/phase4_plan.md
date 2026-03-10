@@ -7,26 +7,26 @@
 
 ## 设计要点
 
-| 主题 | 方案 | 理由 |
-| --- | --- | --- |
-| PPO 变体实现 | CLI 覆盖参数 `--learning_rate` / `--clip_param` / `--entropy_coef` | 避免过度工程化（12 个新任务 ID），且规避 `_apply_ros2_tracking_tune` 静默覆盖风险 |
-| Baseline 种子 | 前置必做步骤 4.0，补齐 3 种子 | 无 3 种子 baseline 则无法做统计对比 |
-| ROS2 Publisher | 批量脚本内置 watchdog | 45h 串行训练需要 publisher 保活 |
-| DR 评估 | 标准环境 + 抗扰动交叉评估 | 需验证 DR 的泛化价值 |
-| 组合实验 | 步骤 4.6b：best PPO + best DR | 为"最佳配置推荐"提供实验依据 |
+| 主题           | 方案                                                                     | 理由                                                                                |
+| -------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| PPO 变体实现   | CLI 覆盖参数 `--learning_rate` / `--clip_param` / `--entropy_coef` | 避免过度工程化（12 个新任务 ID），且规避 `_apply_ros2_tracking_tune` 静默覆盖风险 |
+| Baseline 种子  | 前置必做步骤 4.0，补齐 3 种子                                            | 无 3 种子 baseline 则无法做统计对比                                                 |
+| ROS2 Publisher | 批量脚本内置 watchdog                                                    | 45h 串行训练需要 publisher 保活                                                     |
+| DR 评估        | 标准环境 + 抗扰动交叉评估                                                | 需验证 DR 的泛化价值                                                                |
+| 组合实验       | 步骤 4.6b：best PPO + best DR                                            | 为"最佳配置推荐"提供实验依据                                                        |
 
 ---
 
 ## 前置条件
 
-| 项目 | 状态 | 说明 |
-| --- | --- | --- |
-| Phase 0-3 | ✅ 全部完成 | Flat/Rough baseline + OFAT + 地形验证 |
-| Rough baseline checkpoint | ✅ 可用 | `logs/rsl_rl/unitree_go1_rough/2026-03-08_16-46-27_baseline_rough_ros2cmd/model_1499.pt` |
-| Rough baseline 配置 | ✅ 已确认 | 4096 envs, 1500 iters, `[512,256,128]`, `height_scan(187)` |
-| eval.py | ✅ 已更新 | 支持 `--target_vx` 和放宽通过标准 |
-| reward_engineering.md | ✅ Ch1-6 完成 | 待本阶段完成后写 Ch7 |
-| **Baseline 种子数** | ⚠️ **仅 1 个** | 必须在步骤 4.0 补训 seed=123, 456 |
+| 项目                      | 状态                  | 说明                                                                                       |
+| ------------------------- | --------------------- | ------------------------------------------------------------------------------------------ |
+| Phase 0-3                 | ✅ 全部完成           | Flat/Rough baseline + OFAT + 地形验证                                                      |
+| Rough baseline checkpoint | ✅ 可用               | `logs/rsl_rl/unitree_go1_rough/2026-03-08_16-46-27_baseline_rough_ros2cmd/model_1499.pt` |
+| Rough baseline 配置       | ✅ 已确认             | 4096 envs, 1500 iters,`[512,256,128]`, `height_scan(187)`                              |
+| eval.py                   | ✅ 已更新             | 支持 `--target_vx` 和放宽通过标准                                                        |
+| reward_engineering.md     | ✅ Ch1-6 完成         | 待本阶段完成后写 Ch7                                                                       |
+| **Baseline 种子数** | ⚠️**仅 1 个** | 必须在步骤 4.0 补训 seed=123, 456                                                          |
 
 ---
 
@@ -34,21 +34,21 @@
 
 > **目标**：确保 baseline 拥有 3 种子数据，使后续所有统计对比有效。
 >
-> **[Fact]** 现有 baseline 仅 1 个 checkpoint（seed 未知）。没有 baseline 3 种子的均值±标准差，
+> **[Fact]** 现有 baseline 仅 1 个 checkpoint（seed 42）。没有 baseline 3 种子的均值±标准差，
 > 步骤 4.8 的 t-test / 效应量分析全部无法执行。这不是"可选决策"，是**阻塞项**。
 
 **操作**：
 
 1. 从现有 baseline checkpoint 的 `params/agent.yaml` 确认其 seed
-2. 补训剩余 2 个种子（从 `{42, 123, 456}` 中排除已有 seed）
+2. 补训剩余 2 个种子（从 `{42, 43, 44}` 中排除已有 seed）
 3. 使用与 Phase 1 完全一致的训练命令：
 
 ```powershell
-# 示例：补训 seed=123（另一个 seed=456 同理）
+# 示例：补训 seed=43（另一个 seed=43 同理）
 python scripts/go1-ros2-test/train.py ^
   --task Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-v0 ^
   --num_envs 4096 --max_iterations 1500 --headless ^
-  --disable_ros2_tracking_tune --seed 123 ^
+  --disable_ros2_tracking_tune --seed 43 ^
   --run_name baseline_rough_seed123
 ```
 
@@ -67,6 +67,7 @@ python scripts/go1-ros2-test/train.py ^
 1. 查看 `UnitreeGo1RoughPPORunnerCfg`（位于 IsaacLab 安装包内：
    `isaaclab_tasks/manager_based/locomotion/velocity/config/go1/agents/rsl_rl_ppo_cfg.py`）
    > 注意：该配置定义在 IsaacLab 安装包内，不在本仓库 `src/` 下。
+   >
 2. 记录以下 PPO 参数：
    - `learning_rate`（预期 1e-3）
    - `clip_param`（预期 0.2）
@@ -74,6 +75,7 @@ python scripts/go1-ros2-test/train.py ^
    - `num_learning_epochs`、`num_mini_batches`、`gamma`、`lam`
    - `schedule`（是否有 LR 线性衰减？）、`desired_kl`（是否有自适应 LR？）
      > 如果存在 LR schedule，PPO-LR 实验只改初始值，后期差异会被衰减压缩，需在分析中说明。
+     >
 3. 查看 `UnitreeGo1Ros2CmdRoughEnvCfg` 中的 DR 配置（继承自 `UnitreeGo1RoughEnvCfg`）：
    - `push_robot`（预期 `None`）
    - `add_base_mass`（预期 `(-1.0, 3.0)`）
@@ -101,14 +103,14 @@ python scripts/go1-ros2-test/train.py ^
 
 **实验矩阵（不变）**：
 
-| 实验 ID | 改动参数 | baseline 值 | 候选值 |
-| --- | --- | --- | --- |
-| PPO-LR-Low | `learning_rate` | 1e-3 | **5e-4** |
-| PPO-LR-High | `learning_rate` | 1e-3 | **3e-3** |
-| PPO-Clip-Low | `clip_param` | 0.2 | **0.1** |
-| PPO-Clip-High | `clip_param` | 0.2 | **0.3** |
-| PPO-Ent-Low | `entropy_coef` | 0.01 | **0.005** |
-| PPO-Ent-High | `entropy_coef` | 0.01 | **0.02** |
+| 实验 ID       | 改动参数          | baseline 值 | 候选值          |
+| ------------- | ----------------- | ----------- | --------------- |
+| PPO-LR-Low    | `learning_rate` | 1e-3        | **5e-4**  |
+| PPO-LR-High   | `learning_rate` | 1e-3        | **3e-3**  |
+| PPO-Clip-Low  | `clip_param`    | 0.2         | **0.1**   |
+| PPO-Clip-High | `clip_param`    | 0.2         | **0.3**   |
+| PPO-Ent-Low   | `entropy_coef`  | 0.01        | **0.005** |
+| PPO-Ent-High  | `entropy_coef`  | 0.01        | **0.02**  |
 
 **操作**：
 
@@ -137,7 +139,6 @@ if args_cli.entropy_coef is not None:
 
 3. **关键**：PPO 覆盖必须在 `_apply_ros2_tracking_tune()` 调用**之后**，确保 CLI 显式值优先。
    代码顺序：`update_rsl_rl_cfg` → `_apply_ros2_tracking_tune` → **PPO CLI overrides**
-
 4. 添加安全日志——覆盖生效时打印确认：
 
 ```python
@@ -172,11 +173,11 @@ python scripts/go1-ros2-test/train.py ^
 
 **实验矩阵**：
 
-| 实验 ID | 改动项 | baseline 值 | 实验值 |
-| --- | --- | --- | --- |
-| DR-Friction | 摩擦随机化 | `static=0.8, dynamic=0.6`（固定） | `static=(0.5,1.2), dynamic=(0.4,1.0)` |
-| DR-Mass | 质量扰动扩展 | `(-1.0, 3.0)` kg | `(-3.0, 5.0)` kg |
-| DR-Push | 外部推力启用 | `push_robot=None` | `interval=(10,15)s, vel=(-0.5,0.5)` |
+| 实验 ID     | 改动项       | baseline 值                         | 实验值                                  |
+| ----------- | ------------ | ----------------------------------- | --------------------------------------- |
+| DR-Friction | 摩擦随机化   | `static=0.8, dynamic=0.6`（固定） | `static=(0.5,1.2), dynamic=(0.4,1.0)` |
+| DR-Mass     | 质量扰动扩展 | `(-1.0, 3.0)` kg                  | `(-3.0, 5.0)` kg                      |
+| DR-Push     | 外部推力启用 | `push_robot=None`                 | `interval=(10,15)s, vel=(-0.5,0.5)`   |
 
 **操作**：
 
@@ -248,14 +249,14 @@ class UnitreeGo1Ros2CmdRoughEnvCfg_DRPush(UnitreeGo1Ros2CmdRoughEnvCfg):
 3. 每个 Train 配置需配对一个 `_PLAY` 子类（继承对应 DR Train 配置 + `_PLAY` 的 num_envs/curriculum 设置）
 4. 在 `__init__.py` 注册 3×2=6 个新任务 ID：
 
-| 任务 ID | 类型 |
-| --- | --- |
-| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Friction-v0` | Train |
-| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Friction-Play-v0` | Play |
-| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Mass-v0` | Train |
-| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Mass-Play-v0` | Play |
-| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Push-v0` | Train |
-| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Push-Play-v0` | Play |
+| 任务 ID                                                          | 类型  |
+| ---------------------------------------------------------------- | ----- |
+| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Friction-v0`      | Train |
+| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Friction-Play-v0` | Play  |
+| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Mass-v0`          | Train |
+| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Mass-Play-v0`     | Play  |
+| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Push-v0`          | Train |
+| `Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DR-Push-Play-v0`     | Play  |
 
 5. 更新 `train.py` / `eval.py` 的 `_ROS2_TASK_IDS` 白名单
 6. 同步 `rough_env_cfg_dr_variants.py` → `robot_lab/` 镜像
@@ -296,12 +297,12 @@ python scripts/go1-ros2-test/train.py ^
 
 4. **核验项**（防止 `_apply_ros2_tracking_tune` 静默覆盖）：
 
-| 核验点 | 方法 | 通过条件 |
-| --- | --- | --- |
-| 任务注册 | checkpoint 目录创建 | ✅ 存在 |
+| 核验点       | 方法                       | 通过条件                                                             |
+| ------------ | -------------------------- | -------------------------------------------------------------------- |
+| 任务注册     | checkpoint 目录创建        | ✅ 存在                                                              |
 | PPO 参数生效 | 检查 `params/agent.yaml` | `learning_rate` / `clip_param` / `entropy_coef` 与实验设计一致 |
-| DR 事件配置 | 训练日志中搜索事件名 | 摩擦/质量/推力参数出现在日志中 |
-| reward 项 | 日志中 reward 项名称 | 与 baseline 一致（DR 不改 reward） |
+| DR 事件配置  | 训练日志中搜索事件名       | 摩擦/质量/推力参数出现在日志中                                       |
+| reward 项    | 日志中 reward 项名称       | 与 baseline 一致（DR 不改 reward）                                   |
 
 **产出**：9/9 smoke test 通过记录 + `params/agent.yaml` 核验截图
 
@@ -317,22 +318,23 @@ python scripts/go1-ros2-test/train.py ^
 **操作**：
 
 1. 创建 `scripts/go1-ros2-test/run/phase4/run_phase4_ppo_sweep.ps1`：
+
    - 输入参数矩阵（6 组 PPO × 3 种子）
    - 每次训练前启动/验证 WSL ROS2 publisher（复用 Phase 1 脚本模式）
    - publisher 存活 watchdog：训练过程中每 5 分钟检查 WSL 进程
    - 训练结束后验证 checkpoint 文件存在
    - 失败时记录日志并跳过（不中断整个 sweep）
    - 自动调用 `--run_name ppo_{param}_{value}_seed{N}` 命名
-
 2. 创建 `scripts/go1-ros2-test/run/phase4/run_phase4_dr_sweep.ps1`：
-   - 同样模式，3 组 DR × 3 种子
 
+   - 同样模式，3 组 DR × 3 种子
 3. 创建 `scripts/go1-ros2-test/run/phase4/run_phase4_eval_all.ps1`：
+
    - 遍历所有 checkpoint 目录
    - 自动执行 eval.py 并保存 JSON 到 `logs/eval/phase4_formal/`
    - 评估过程中同样需要 ROS2 publisher
-
 4. **发散判定**：
+
    - 定义发散标准：训练完成后检查最终 `mean_reward`
    - 若最终 reward < baseline 收敛后 reward 的 30%，标记为发散
    - 发散的训练仍保留 checkpoint 和日志，但在汇总表中标注
@@ -350,7 +352,7 @@ python scripts/go1-ros2-test/train.py ^
 - `num_envs=4096`
 - `max_iterations=1500`（与 baseline 一致）
 - `--headless --disable_ros2_tracking_tune`
-- 种子：`seed=42, 123, 456`
+- 种子：`seed=42, 43, 44`（与 baseline 3 种子一致）
 
 **命令模板**（通过 CLI 覆盖，无需新任务 ID）：
 
@@ -449,8 +451,8 @@ python scripts/go1-ros2-test/train.py ^
 
 - `--task Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Play-v0`
 - `num_envs=64, eval_steps=3000, warmup_steps=300`
-- ROS2 publisher `vx=0.8, 20Hz`
-- `--target_vx 0.8`
+- ROS2 publisher `vx=1.0, 50Hz`
+- `--target_vx 1.0`
 - 通过标准：与 Rough baseline 评估一致（`pass_abs_err=0.25, pass_stable_ratio=0.7, stable_err_thresh=0.2`）
 
 > **注意**：eval.py 中 cmd_vx 对 target_vx 的容差已硬编码为 0.05（第 438 行），
@@ -462,7 +464,7 @@ python scripts/go1-ros2-test/train.py ^
 python scripts/go1-ros2-test/eval.py ^
   --task Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Play-v0 ^
   --num_envs 64 --eval_steps 3000 --warmup_steps 300 ^
-  --target_vx 0.8 --pass_abs_err 0.25 --pass_stable_ratio 0.7 ^
+  --target_vx 1.0 --pass_abs_err 0.25 --pass_stable_ratio 0.7 ^
   --stable_err_thresh 0.2 --seed 42 ^
   --load_run <run_dir> --checkpoint model_1499.pt ^
   --summary_json logs/eval/phase4_formal/ppo/ppo_lr_low_seed42.json
@@ -472,13 +474,13 @@ python scripts/go1-ros2-test/eval.py ^
 
 **评估矩阵**：
 
-| 类别 | 实验组数 | 种子数 | 评估次数 |
-| --- | --- | --- | --- |
-| Baseline（对照） | 1 | 3 | 3 |
-| PPO 变体 | 6 | 3 | 18 |
-| DR 变体 | 3 | 3 | 9 |
-| 组合验证 | 1 | 1-3 | 1-3 |
-| **合计** | | | **31-33** |
+| 类别             | 实验组数 | 种子数 | 评估次数        |
+| ---------------- | -------- | ------ | --------------- |
+| Baseline（对照） | 1        | 3      | 3               |
+| PPO 变体         | 6        | 3      | 18              |
+| DR 变体          | 3        | 3      | 9               |
+| 组合验证         | 1        | 1-3    | 1-3             |
+| **合计**   |          |        | **31-33** |
 
 ### 4.7.2 抗扰动交叉评估（DR 泛化验证）
 
@@ -486,12 +488,12 @@ python scripts/go1-ros2-test/eval.py ^
 
 选取 baseline + 3 个 DR 变体的 best seed checkpoint，在 DR-Push Play 环境下交叉评估：
 
-| 被评估模型 | 评估环境 | 目的 |
-| --- | --- | --- |
-| Baseline | DR-Push-Play | baseline 在推力扰动下的表现（对照） |
-| DR-Friction | DR-Push-Play | 摩擦 DR 对推力扰动的迁移能力 |
-| DR-Mass | DR-Push-Play | 质量 DR 对推力扰动的迁移能力 |
-| DR-Push | DR-Push-Play | 推力 DR 在同分布下的优势 |
+| 被评估模型  | 评估环境     | 目的                                |
+| ----------- | ------------ | ----------------------------------- |
+| Baseline    | DR-Push-Play | baseline 在推力扰动下的表现（对照） |
+| DR-Friction | DR-Push-Play | 摩擦 DR 对推力扰动的迁移能力        |
+| DR-Mass     | DR-Push-Play | 质量 DR 对推力扰动的迁移能力        |
+| DR-Push     | DR-Push-Play | 推力 DR 在同分布下的优势            |
 
 > 需要为 DR-Push 创建 `_PLAY` 评估环境（步骤 4.3 已包含）。
 > 此部分为 4 次评估，时间代价低（~20min），信息量高。
@@ -508,15 +510,15 @@ python scripts/go1-ros2-test/eval.py ^
 
 PPO 实验汇总表（均值 ± 标准差）：
 
-| 配置 | `mean_vx_abs_err` | `stable_ratio` | `base_contact_rate` | 收敛 iter |
-| --- | --- | --- | --- | --- |
-| Baseline | μ ± σ | μ ± σ | μ ± σ | — |
-| PPO-LR-Low | μ ± σ | μ ± σ | μ ± σ | — |
-| PPO-LR-High | μ ± σ | μ ± σ | μ ± σ | — |
-| PPO-Clip-Low | μ ± σ | μ ± σ | μ ± σ | — |
-| PPO-Clip-High | μ ± σ | μ ± σ | μ ± σ | — |
-| PPO-Ent-Low | μ ± σ | μ ± σ | μ ± σ | — |
-| PPO-Ent-High | μ ± σ | μ ± σ | μ ± σ | — |
+| 配置          | `mean_vx_abs_err` | `stable_ratio` | `base_contact_rate` | 收敛 iter |
+| ------------- | ------------------- | ---------------- | --------------------- | --------- |
+| Baseline      | μ ± σ            | μ ± σ         | μ ± σ              | —        |
+| PPO-LR-Low    | μ ± σ            | μ ± σ         | μ ± σ              | —        |
+| PPO-LR-High   | μ ± σ            | μ ± σ         | μ ± σ              | —        |
+| PPO-Clip-Low  | μ ± σ            | μ ± σ         | μ ± σ              | —        |
+| PPO-Clip-High | μ ± σ            | μ ± σ         | μ ± σ              | —        |
+| PPO-Ent-Low   | μ ± σ            | μ ± σ         | μ ± σ              | —        |
+| PPO-Ent-High  | μ ± σ            | μ ± σ         | μ ± σ              | —        |
 
 DR 实验汇总表（同格式）+ 组合验证行。
 
@@ -577,18 +579,18 @@ DR 实验汇总表（同格式）+ 组合验证行。
 
 ## 通过标准汇总
 
-| 条件 | 要求 |
-| --- | --- |
-| Baseline 3 种子完成 | 3 个 baseline checkpoint 存在 |
-| PPO 6 组训练完成 | 18 个 checkpoint 存在 |
-| DR 3 组训练完成 | 9 个 checkpoint 存在 |
-| 组合验证完成 | 至少 1 个组合 checkpoint 存在 |
-| 标准评估全部完成 | 31-33 个 JSON 文件 |
-| 交叉评估完成 | 4 个交叉评估 JSON 文件 |
+| 条件                   | 要求                                  |
+| ---------------------- | ------------------------------------- |
+| Baseline 3 种子完成    | 3 个 baseline checkpoint 存在         |
+| PPO 6 组训练完成       | 18 个 checkpoint 存在                 |
+| DR 3 组训练完成        | 9 个 checkpoint 存在                  |
+| 组合验证完成           | 至少 1 个组合 checkpoint 存在         |
+| 标准评估全部完成       | 31-33 个 JSON 文件                    |
+| 交叉评估完成           | 4 个交叉评估 JSON 文件                |
 | params/agent.yaml 核验 | 所有 PPO 变体的实际参数与实验设计一致 |
-| 收敛稳定性 | 不劣于 baseline（均值±标准差范围内） |
-| 数据分析 | 7 个问题全部回答 |
-| 第 7 章完稿 | reward_engineering.md 更新 |
+| 收敛稳定性             | 不劣于 baseline（均值±标准差范围内） |
+| 数据分析               | 7 个问题全部回答                      |
+| 第 7 章完稿            | reward_engineering.md 更新            |
 
 **阶段整体通过条件**：
 
@@ -601,53 +603,53 @@ DR 实验汇总表（同格式）+ 组合验证行。
 
 ## 风险与对策
 
-| # | 风险 | 影响 | 对策 |
-| --- | --- | --- | --- |
-| 1 | 训练时间过长（30 次 × 2.5h = 75h） | 超出 5 天预算 | 优先跑 PPO-LR 和 DR-Push（信息量最大），其余视时间决定 |
-| 2 | PPO-LR-High 发散 | 训练失败 | 定义发散标准：最终 reward < baseline 收敛 reward 的 30%；批量脚本自动检测并标记 |
-| 3 | DR-Push 导致大量翻倒 | 训练不收敛 | 降低推力范围（如 `(-0.3, 0.3)`）重试 |
-| 4 | 3 种子方差过大无法得出结论 | 统计不显著 | 依靠效应量（Cohen's d）和置信区间做定性判断，明确标注统计功效局限 |
-| 5 | Baseline 种子不足 | 缺少对照基线 | 步骤 4.0 补训至 3 个种子 |
-| 6 | GPU 显存不足（4096 envs + 大网络） | 训练 OOM | 降低 num_envs 至 2048 |
-| 7 | `_apply_ros2_tracking_tune` 静默覆盖 PPO 参数 | 实验数据作废 | CLI 覆盖方案 + smoke test 核验 `params/agent.yaml` |
-| 8 | WSL ROS2 publisher 中断（45h 串行训练） | 训练数据作废 | 批量脚本内置 publisher watchdog（每 5min 检查） |
-| 9 | 磁盘空间不足 | 训练中断 | 预估 30 checkpoint × ~100MB + logs ≈ 5GB，训练前检查可用空间 |
+| # | 风险                                            | 影响          | 对策                                                                            |
+| - | ----------------------------------------------- | ------------- | ------------------------------------------------------------------------------- |
+| 1 | 训练时间过长（30 次 × 2.5h = 75h）             | 超出 5 天预算 | 优先跑 PPO-LR 和 DR-Push（信息量最大），其余视时间决定                          |
+| 2 | PPO-LR-High 发散                                | 训练失败      | 定义发散标准：最终 reward < baseline 收敛 reward 的 30%；批量脚本自动检测并标记 |
+| 3 | DR-Push 导致大量翻倒                            | 训练不收敛    | 降低推力范围（如 `(-0.3, 0.3)`）重试                                          |
+| 4 | 3 种子方差过大无法得出结论                      | 统计不显著    | 依靠效应量（Cohen's d）和置信区间做定性判断，明确标注统计功效局限               |
+| 5 | Baseline 种子不足                               | 缺少对照基线  | 步骤 4.0 补训至 3 个种子                                                        |
+| 6 | GPU 显存不足（4096 envs + 大网络）              | 训练 OOM      | 降低 num_envs 至 2048                                                           |
+| 7 | `_apply_ros2_tracking_tune` 静默覆盖 PPO 参数 | 实验数据作废  | CLI 覆盖方案 + smoke test 核验 `params/agent.yaml`                            |
+| 8 | WSL ROS2 publisher 中断（45h 串行训练）         | 训练数据作废  | 批量脚本内置 publisher watchdog（每 5min 检查）                                 |
+| 9 | 磁盘空间不足                                    | 训练中断      | 预估 30 checkpoint × ~100MB + logs ≈ 5GB，训练前检查可用空间                  |
 
 ---
 
 ## 时间线估算
 
-| 天 | 任务 | 说明 |
-| --- | --- | --- |
+| 天    | 任务                                    | 说明                                                                             |
+| ----- | --------------------------------------- | -------------------------------------------------------------------------------- |
 | Day 1 | 步骤 4.0 + 4.1 + 4.2 + 4.3 + 4.4 + 4.4b | 补训 baseline（后台）+ 参数确认 + CLI 覆盖实现 + DR 配置 + smoke test + 批量脚本 |
-| Day 2 | 步骤 4.5（前半） | PPO-LR + PPO-Clip 训练（12 次，~30h，跨夜运行） |
-| Day 3 | 步骤 4.5（后半） + 4.6 | PPO-Ent + DR 训练（15 次，~37h，跨夜运行） |
-| Day 4 | 步骤 4.6b + 4.7 | 组合验证训练 + 全部评估（标准 + 交叉） |
-| Day 5 | 步骤 4.8 + 4.9 | 数据分析 + 第 7 章撰写 |
+| Day 2 | 步骤 4.5（前半）                        | PPO-LR + PPO-Clip 训练（12 次，~30h，跨夜运行）                                  |
+| Day 3 | 步骤 4.5（后半） + 4.6                  | PPO-Ent + DR 训练（15 次，~37h，跨夜运行）                                       |
+| Day 4 | 步骤 4.6b + 4.7                         | 组合验证训练 + 全部评估（标准 + 交叉）                                           |
+| Day 5 | 步骤 4.8 + 4.9                          | 数据分析 + 第 7 章撰写                                                           |
 
 ---
 
 ## 附录：审查问题清单
 
-| # | 问题 ID | 问题 | 修复 |
-| --- | --- | --- | --- |
-| 1 | C1 | `_apply_ros2_tracking_tune` 静默覆盖 PPO 变体参数 | 改用 CLI 覆盖方案（步骤 4.2）+ smoke test 核验 `params/agent.yaml`（步骤 4.4） |
-| 2 | C2 | `--pass_cmd_vx_tol` 在 eval.py 中不存在 | 从评估命令中删除该参数（步骤 4.7） |
-| 3 | C3 | PPO 配置文件路径不存在 + 12 任务 ID 过度工程化 | CLI 覆盖方案替代（步骤 4.2）；修正 `UnitreeGo1RoughPPORunnerCfg` 路径（步骤 4.1） |
-| 4 | C4 | Baseline 只有 1 个种子，统计对比被阻塞 | 提升为前置步骤 4.0 |
-| 5 | C5 | 27 次串行训练没有 ROS2 Publisher 管理方案 | 新增步骤 4.4b 批量脚本 + publisher watchdog |
-| 6 | M1 | 没有 PPO+DR 组合实验 | 新增步骤 4.6b 组合验证 |
-| 7 | M2 | DR 评估仅标准环境 | 步骤 4.7.2 新增抗扰动交叉评估 |
-| 8 | M3 | DR 实现细节缺失 | 步骤 4.3 补充伪代码级 `__post_init__` 实现 |
-| 9 | M4 | Day 4 时间预算严重不足 | 时间线从 4 天调整为 5 天 |
-| 10 | M5 | 没有自动化批处理脚本 | 新增步骤 4.4b |
-| 11 | M6 | 发散没有量化判定标准 | 风险表 #2 新增量化标准 + 批量脚本自动检测 |
-| 12 | m1 | 3 种子 t-test 统计功效极低 | 步骤 4.8.2 新增统计功效声明 + 效应量为主 |
-| 13 | m2 | 缺少多重比较校正 | 步骤 4.8.2 新增 Bonferroni 校正说明 |
-| 14 | m3 | "收敛 iter"没有形式化定义 | 步骤 4.8.1 新增定义 |
-| 15 | m4 | 未考虑 LR schedule 交互效应 | 步骤 4.1 新增 `schedule`/`desired_kl` 确认项 |
-| 16 | s1 | CLAUDE.md 同步表新文件路径未确定 | 步骤 4.3 操作项 #7 |
-| 17 | s2 | eval.py 未传 `--seed` | 步骤 4.7 评估命令新增 `--seed 42` |
-| 18 | s3 | 磁盘空间未预估 | 风险表 #9 |
-| 19 | s4 | target_vx 不一致（0.8 vs 1.0） | 步骤 4.7 统一为 `--target_vx 0.8`，与 ROS2 publisher 对齐 |
-| 20 | — | 分析问题从 6 个增至 7 个 | 步骤 4.8.2 新增第 7 题（组合效应） |
+| #  | 问题 ID | 问题                                                | 修复                                                                                |
+| -- | ------- | --------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 1  | C1      | `_apply_ros2_tracking_tune` 静默覆盖 PPO 变体参数 | 改用 CLI 覆盖方案（步骤 4.2）+ smoke test 核验 `params/agent.yaml`（步骤 4.4）    |
+| 2  | C2      | `--pass_cmd_vx_tol` 在 eval.py 中不存在           | 从评估命令中删除该参数（步骤 4.7）                                                  |
+| 3  | C3      | PPO 配置文件路径不存在 + 12 任务 ID 过度工程化      | CLI 覆盖方案替代（步骤 4.2）；修正 `UnitreeGo1RoughPPORunnerCfg` 路径（步骤 4.1） |
+| 4  | C4      | Baseline 只有 1 个种子，统计对比被阻塞              | 提升为前置步骤 4.0                                                                  |
+| 5  | C5      | 27 次串行训练没有 ROS2 Publisher 管理方案           | 新增步骤 4.4b 批量脚本 + publisher watchdog                                         |
+| 6  | M1      | 没有 PPO+DR 组合实验                                | 新增步骤 4.6b 组合验证                                                              |
+| 7  | M2      | DR 评估仅标准环境                                   | 步骤 4.7.2 新增抗扰动交叉评估                                                       |
+| 8  | M3      | DR 实现细节缺失                                     | 步骤 4.3 补充伪代码级 `__post_init__` 实现                                        |
+| 9  | M4      | Day 4 时间预算严重不足                              | 时间线从 4 天调整为 5 天                                                            |
+| 10 | M5      | 没有自动化批处理脚本                                | 新增步骤 4.4b                                                                       |
+| 11 | M6      | 发散没有量化判定标准                                | 风险表 #2 新增量化标准 + 批量脚本自动检测                                           |
+| 12 | m1      | 3 种子 t-test 统计功效极低                          | 步骤 4.8.2 新增统计功效声明 + 效应量为主                                            |
+| 13 | m2      | 缺少多重比较校正                                    | 步骤 4.8.2 新增 Bonferroni 校正说明                                                 |
+| 14 | m3      | "收敛 iter"没有形式化定义                           | 步骤 4.8.1 新增定义                                                                 |
+| 15 | m4      | 未考虑 LR schedule 交互效应                         | 步骤 4.1 新增 `schedule`/`desired_kl` 确认项                                    |
+| 16 | s1      | CLAUDE.md 同步表新文件路径未确定                    | 步骤 4.3 操作项 #7                                                                  |
+| 17 | s2      | eval.py 未传 `--seed`                             | 步骤 4.7 评估命令新增 `--seed 42`                                                 |
+| 18 | s3      | 磁盘空间未预估                                      | 风险表 #9                                                                           |
+| 19 | s4      | target_vx 不一致（0.8 vs 1.0）                      | 步骤 4.7 统一为 `--target_vx 1.0`，与 Phase 1 baseline 训练一致                   |
+| 20 | —      | 分析问题从 6 个增至 7 个                            | 步骤 4.8.2 新增第 7 题（组合效应）                                                  |
