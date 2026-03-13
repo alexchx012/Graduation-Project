@@ -80,14 +80,18 @@ DR_EXPERIMENTS = [
     {"name": "dr_push",     "task": "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-v0"},
 ]
 
-# 组合验证实验（步骤 4.6b，需手动指定 best PPO + best DR）
-# 训练完成后根据结果修改此处
+# 组合验证实验（步骤 4.6b）
+# 当前决策：
+# - 分析最优：ppo_clip_low + dr_mass
+# - 实际执行：ppo_clip_high + dr_mass
+#   原因：clip_low 的最终均值更高，但种子间方差和训练风险都更大；
+#   clip_high 均值略低，但稳定性更好，更适合作为组合验证的保守方案。
 COMBO_EXPERIMENTS = [
     {
         "name": "combo_best",
-        "task": "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-v0",  # 替换为 best DR
-        "learning_rate": 5e-4,   # 替换为 best PPO lr（如适用）
-        "clip_param": None,      # 替换为 best PPO clip（如适用）
+        "task": "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-v0",
+        "learning_rate": None,
+        "clip_param": 0.3,
         "entropy_coef": None,    # 替换为 best PPO ent（如适用）
     },
 ]
@@ -386,7 +390,7 @@ def _verify_checkpoint(run_dir: Path, exp: dict, log: DualLogger) -> bool:
                 log.warn(f"  agent.yaml ent 不匹配，预期 {exp['entropy_coef']}")
                 ok = False
         if ok:
-            log.info(f"  agent.yaml PPO 参数核验 ✓")
+            log.info("  agent.yaml PPO 参数核验 OK")
         return ok
     except Exception as e:
         log.warn(f"  agent.yaml 读取失败: {e}")
@@ -411,10 +415,10 @@ def _check_divergence(run_dir: Path, log: DualLogger) -> bool:
                     avg = sum(last_rewards) / max(len(last_rewards), 1)
                     threshold = BASELINE_REWARD_ESTIMATE * DIVERGENCE_THRESHOLD
                     if avg < threshold:
-                        log.warn(f"  ⚠ 发散疑似: 最终 reward={avg:.2f} < {threshold:.2f}")
+                        log.warn(f"  [DIVERGED?] 最终 reward={avg:.2f} < {threshold:.2f}")
                         return True
                     else:
-                        log.info(f"  最终 reward={avg:.2f} (> {threshold:.2f}) ✓")
+                        log.info(f"  最终 reward={avg:.2f} (> {threshold:.2f}) OK")
             except Exception:
                 pass
     return False
@@ -492,7 +496,7 @@ def run_single_training(
                                 )
                             else:
                                 elapsed = (time.time() - start_time) / 3600
-                                log.info(f"  Watchdog: ROS2 ✓, 已运行 {elapsed:.1f}h")
+                                log.info(f"  Watchdog: ROS2 OK, 已运行 {elapsed:.1f}h")
 
                 duration = time.time() - start_time
                 rc = proc.returncode
@@ -512,7 +516,7 @@ def run_single_training(
                 diverged = _check_divergence(run_dir, log)
                 ckpt = run_dir / "model_1499.pt"
 
-                log.info(f"  ✅ 成功: {run_name} ({duration/3600:.2f}h)")
+                log.info(f"  [PASS] {run_name} ({duration/3600:.2f}h)")
                 return RunResult(
                     exp_name=exp["name"], seed=seed, run_name=run_name,
                     passed=True, return_code=0, attempts=attempt,
@@ -535,7 +539,7 @@ def run_single_training(
                         err_tail = "\n".join(lines[-5:])
                     except Exception:
                         pass
-                    log.error(f"  ❌ 失败: rc={rc}, stderr 尾部:")
+                    log.error(f"  [FAIL] rc={rc}, stderr 尾部:")
                     log.error(f"  {err_tail}")
                     return RunResult(
                         exp_name=exp["name"], seed=seed, run_name=run_name,
@@ -561,7 +565,7 @@ def run_single_training(
             )
 
     # 所有重试用尽
-    log.error(f"  ❌ {run_name} 在 {MAX_RETRY} 次重试后仍失败")
+    log.error(f"  [FAIL] {run_name} 在 {MAX_RETRY} 次重试后仍失败")
     return RunResult(
         exp_name=exp["name"], seed=seed, run_name=run_name,
         passed=False, return_code=-1, attempts=MAX_RETRY,
@@ -581,8 +585,8 @@ def print_summary(results: list[RunResult], log: DualLogger):
 
     for r in results:
         t = f"{r.duration_s/3600:.1f}h" if r.duration_s > 0 else "—"
-        div = "⚠" if r.diverged else ""
-        status = "✅ PASS" if r.passed else "❌ FAIL"
+        div = "[DIVERGED?]" if r.diverged else ""
+        status = "PASS" if r.passed else "FAIL"
         log.info(f"| {r.run_name:<25} | {r.seed:>4} | {r.return_code:>3} | {t:>7} | {div:>3} | {status:<8} |")
 
     passed = sum(1 for r in results if r.passed)
@@ -638,7 +642,7 @@ def check_prerequisites(project_root: Path) -> bool:
         if free_gb < 10:
             print(f"[WARN] 磁盘剩余 {free_gb:.1f}GB，建议 >10GB")
         else:
-            print(f"[CHECK] 磁盘空间: {free_gb:.1f}GB ✓")
+            print(f"[CHECK] 磁盘空间: {free_gb:.1f}GB OK")
 
     return ok
 
