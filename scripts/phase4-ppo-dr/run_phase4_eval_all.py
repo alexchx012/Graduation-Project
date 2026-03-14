@@ -17,18 +17,18 @@ Phase 4 Step 4.4b: 批量评估脚本
     conda activate env_isaaclab
 
     # 标准评估（全部模型）
-    python scripts/go1-ros2-test/run/phase4/run_phase4_eval_all.py --mode standard
+    python scripts/phase4-ppo-dr/run_phase4_eval_all.py --mode standard
 
     # 抗扰动交叉评估
-    python scripts/go1-ros2-test/run/phase4/run_phase4_eval_all.py --mode cross
+    python scripts/phase4-ppo-dr/run_phase4_eval_all.py --mode cross
 
     # 全部
-    python scripts/go1-ros2-test/run/phase4/run_phase4_eval_all.py --mode all
+    python scripts/phase4-ppo-dr/run_phase4_eval_all.py --mode all
 
     # 跳过 ROS2 / Dry run / 断点续评
-    python scripts/go1-ros2-test/run/phase4/run_phase4_eval_all.py --mode all --skip-ros2
-    python scripts/go1-ros2-test/run/phase4/run_phase4_eval_all.py --mode all --dry-run
-    python scripts/go1-ros2-test/run/phase4/run_phase4_eval_all.py --mode all --resume
+    python scripts/phase4-ppo-dr/run_phase4_eval_all.py --mode all --skip-ros2
+    python scripts/phase4-ppo-dr/run_phase4_eval_all.py --mode all --dry-run
+    python scripts/phase4-ppo-dr/run_phase4_eval_all.py --mode all --resume
 """
 
 import argparse
@@ -198,7 +198,7 @@ class Ros2PublisherManager:
             if not self._is_alive():
                 self.log.error("ROS2 publisher 启动后立即退出")
                 return False
-            self.log.info("ROS2 publisher 已启动 ✓")
+            self.log.info("ROS2 publisher 已启动 OK")
             return True
         except Exception as e:
             self.log.error(f"启动失败: {e}")
@@ -282,6 +282,81 @@ def _find_run_dir(logs_dir: Path, run_name_pattern: str) -> Optional[Path]:
     return dirs[0] if dirs else None
 
 
+def _extract_seed_from_stem(stem: str) -> Optional[int]:
+    """从类似 dr_mass_seed43 / baseline_seed42 的文件名中提取 seed。"""
+    if "seed" not in stem:
+        return None
+    suffix = stem.rsplit("seed", 1)[-1]
+    return int(suffix) if suffix.isdigit() else None
+
+
+def _load_json(path: Path) -> Optional[dict]:
+    """安全读取 JSON 文件。"""
+    try:
+        return json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return None
+
+
+def _pick_best_standard_seed(
+    eval_out_base: Path,
+    category: str,
+    model_name: str,
+) -> Optional[dict]:
+    """从 standard 评估 JSON 中挑选 best seed。
+
+    排序规则：
+    1. pass=True 优先
+    2. mean_vx_abs_err 越低越好
+    3. stable_ratio 越高越好
+    4. mean_base_contact_rate 越低越好
+    5. seed 越小越优先（仅用于稳定 tie-break）
+    """
+    category_dir = eval_out_base / category
+    if not category_dir.exists():
+        return None
+
+    pattern = "baseline_seed*.json" if model_name == "baseline" else f"{model_name}_seed*.json"
+    candidates: list[dict] = []
+
+    for json_path in sorted(category_dir.glob(pattern)):
+        data = _load_json(json_path)
+        if not data:
+            continue
+
+        seed = _extract_seed_from_stem(json_path.stem)
+        if seed is None:
+            continue
+
+        mean_vx_abs_err = data.get("mean_vx_abs_err")
+        stable_ratio = data.get("stable_ratio")
+        if mean_vx_abs_err is None or stable_ratio is None:
+            continue
+
+        candidates.append({
+            "seed": seed,
+            "json_path": json_path,
+            "pass": bool(data.get("pass", False)),
+            "mean_vx_abs_err": float(mean_vx_abs_err),
+            "stable_ratio": float(stable_ratio),
+            "mean_base_contact_rate": float(data.get("mean_base_contact_rate", float("inf"))),
+        })
+
+    if not candidates:
+        return None
+
+    candidates.sort(
+        key=lambda x: (
+            not x["pass"],
+            x["mean_vx_abs_err"],
+            -x["stable_ratio"],
+            x["mean_base_contact_rate"],
+            x["seed"],
+        )
+    )
+    return candidates[0]
+
+
 def discover_eval_jobs(
     project_root: Path, mode: str, log: DualLogger,
 ) -> list[EvalJob]:
@@ -354,24 +429,35 @@ def discover_eval_jobs(
 
     # ── 抗扰动交叉评估 ──
     if mode in ("cross", "all"):
-        # 选取 baseline + 3 DR 变体的 best seed (seed=42 作为默认)
-        cross_models = [
-            ("baseline", BASELINE_CHECKPOINTS.get(42, "")),
-        ]
-        for exp_name in DR_EXPERIMENTS:
-            pattern = f"{exp_name}_seed42"
-            run_dir = _find_run_dir(logs_dir, pattern)
-            if run_dir:
-                cross_models.append((exp_name, str(run_dir)))
-            else:
-                log.warn(f"Cross-eval: {pattern} checkpoint 未找到")
+        # 选取 baseline + 3 DR 变体在 standard 评估中的 best seed。
+        # 若 standard JSON 尚不存在，则保守回退到 seed42。
+        cross_models: list[tuple[str, str]] = []
 
-        for model_name, run_path in cross_models:
-            if model_name == "baseline":
-                full_path = str(logs_dir / run_path)
+        for model_name in ["baseline"] + DR_EXPERIMENTS:
+            category = "baseline" if model_name == "baseline" else "dr"
+            best = _pick_best_standard_seed(eval_out_base, category, model_name)
+
+            if best is not None:
+                selected_seed = best["seed"]
+                log.info(
+                    f"Cross-eval best seed: {model_name}=seed{selected_seed} "
+                    f"(pass={best['pass']}, abs_err={best['mean_vx_abs_err']:.4f}, "
+                    f"stable_ratio={best['stable_ratio']:.4f})"
+                )
             else:
-                full_path = run_path
+                selected_seed = 42
+                log.warn(f"Cross-eval 未找到 {model_name} 的 standard 评估 JSON，回退到 seed42")
+
+            if model_name == "baseline":
+                dir_name = BASELINE_CHECKPOINTS.get(selected_seed, "")
+                full_path = str(logs_dir / dir_name) if dir_name else ""
+            else:
+                pattern = f"{model_name}_seed{selected_seed}"
+                run_dir = _find_run_dir(logs_dir, pattern)
+                full_path = str(run_dir) if run_dir else ""
+
             if Path(full_path).exists() and (Path(full_path) / "model_1499.pt").exists():
+                cross_models.append((model_name, full_path))
                 jobs.append(EvalJob(
                     name=f"cross_{model_name}", category="cross",
                     eval_task=EVAL_TASK_CROSS,
@@ -466,7 +552,7 @@ def run_single_eval(
             if rc == 0:
                 # 验证输出 JSON 存在
                 if Path(job.output_json).exists():
-                    log.info(f"  ✅ 成功: {job.name} ({duration:.0f}s)")
+                    log.info(f"  [PASS] {job.name} ({duration:.0f}s)")
                 else:
                     log.warn(f"  评估返回 0 但 JSON 未生成: {job.output_json}")
                 return EvalResult(
@@ -486,7 +572,7 @@ def run_single_eval(
                         err_tail = "\n".join(lines[-5:])
                     except Exception:
                         pass
-                    log.error(f"  ❌ 失败: rc={rc}")
+                    log.error(f"  [FAIL] rc={rc}")
                     log.error(f"  {err_tail}")
                     return EvalResult(
                         name=job.name, category=job.category, passed=False,
@@ -509,7 +595,7 @@ def run_single_eval(
                 duration_s=time.time() - start, attempts=attempt, error=str(e),
             )
 
-    log.error(f"  ❌ {job.name} 在 {MAX_RETRY} 次重试后仍失败")
+    log.error(f"  [FAIL] {job.name} 在 {MAX_RETRY} 次重试后仍失败")
     return EvalResult(
         name=job.name, category=job.category, passed=False,
         attempts=MAX_RETRY, error=f"all {MAX_RETRY} retries exhausted",
@@ -528,7 +614,7 @@ def print_summary(results: list[EvalResult], log: DualLogger):
 
     for r in results:
         t = f"{r.duration_s:.0f}s" if r.duration_s > 0 else "—"
-        status = "✅ PASS" if r.passed else "❌ FAIL"
+        status = "PASS" if r.passed else "FAIL"
         log.info(f"| {r.name:<28} | {r.category:<8} | {r.return_code:>3} | {t:>6} | {status:<8} |")
 
     passed = sum(1 for r in results if r.passed)

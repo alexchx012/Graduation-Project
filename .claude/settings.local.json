@@ -7,7 +7,8 @@
       "Bash(xargs grep:*)",
       "Bash(wsl -d Ubuntu-22.04 bash -lc \"cd /mnt/d/Graduation-Project/scripts/baseline-repro/Phase1-Baseline && bash -x run_ros2_cmd.sh 2>&1 | head -30\")",
       "Bash(wsl -d Ubuntu-22.04 bash -lc \"export ROS_DOMAIN_ID=0 && export RMW_IMPLEMENTATION=rmw_fastrtps_cpp && export FASTDDS_BUILTIN_TRANSPORTS=UDPv4 && export FASTRTPS_DEFAULT_PROFILES_FILE=/mnt/d/Graduation-Project/configs/ros2/fastrtps_wsl_to_win.xml && source /opt/ros/humble/setup.bash && ros2 topic list 2>/dev/null\")",
-      "Bash(wsl -d Ubuntu-22.04 bash -lc \"unset FASTRTPS_DEFAULT_PROFILES_FILE && unset FASTDDS_DEFAULT_PROFILES_FILE && source /opt/ros/humble/setup.bash && ros2 topic list 2>/dev/null\")"
+      "Bash(wsl -d Ubuntu-22.04 bash -lc \"unset FASTRTPS_DEFAULT_PROFILES_FILE && unset FASTDDS_DEFAULT_PROFILES_FILE && source /opt/ros/humble/setup.bash && ros2 topic list 2>/dev/null\")",
+      "Bash(find \"D:/Graduation-Project/IsaacLab/source/isaaclab\" -name \"*.py\" -path \"*mdp*\" 2>/dev/null | head -20)"
     ]
   },
   "outputStyle": "Explanatory"

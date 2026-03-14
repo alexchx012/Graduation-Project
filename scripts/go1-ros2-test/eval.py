@@ -20,6 +20,7 @@ from isaaclab.app import AppLauncher
 
 # local imports
 import cli_args  # isort: skip
+from checkpoint_utils import resolve_eval_checkpoint_path  # isort: skip
 
 # add argparse arguments
 parser = argparse.ArgumentParser(
@@ -283,12 +284,14 @@ def main(
     log_root_path = os.path.abspath(log_root_path)
     print(f"[INFO] Loading experiment from directory: {log_root_path}")
 
-    if args_cli.checkpoint:
-        resume_path = retrieve_file_path(args_cli.checkpoint)
-    else:
-        resume_path = get_checkpoint_path(
-            log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint
-        )
+    resume_path = resolve_eval_checkpoint_path(
+        log_root_path=log_root_path,
+        load_run=agent_cfg.load_run,
+        load_checkpoint=agent_cfg.load_checkpoint,
+        checkpoint_arg=args_cli.checkpoint,
+        retrieve_file_path_func=retrieve_file_path,
+        get_checkpoint_path_func=get_checkpoint_path,
+    )
     print(f"[INFO] Using checkpoint: {resume_path}")
 
     # Create environment.
