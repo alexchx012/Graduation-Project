@@ -8,7 +8,12 @@
       "Bash(wsl -d Ubuntu-22.04 bash -lc \"cd /mnt/d/Graduation-Project/scripts/baseline-repro/Phase1-Baseline && bash -x run_ros2_cmd.sh 2>&1 | head -30\")",
       "Bash(wsl -d Ubuntu-22.04 bash -lc \"export ROS_DOMAIN_ID=0 && export RMW_IMPLEMENTATION=rmw_fastrtps_cpp && export FASTDDS_BUILTIN_TRANSPORTS=UDPv4 && export FASTRTPS_DEFAULT_PROFILES_FILE=/mnt/d/Graduation-Project/configs/ros2/fastrtps_wsl_to_win.xml && source /opt/ros/humble/setup.bash && ros2 topic list 2>/dev/null\")",
       "Bash(wsl -d Ubuntu-22.04 bash -lc \"unset FASTRTPS_DEFAULT_PROFILES_FILE && unset FASTDDS_DEFAULT_PROFILES_FILE && source /opt/ros/humble/setup.bash && ros2 topic list 2>/dev/null\")",
-      "Bash(find \"D:/Graduation-Project/IsaacLab/source/isaaclab\" -name \"*.py\" -path \"*mdp*\" 2>/dev/null | head -20)"
+      "Bash(find \"D:/Graduation-Project/IsaacLab/source/isaaclab\" -name \"*.py\" -path \"*mdp*\" 2>/dev/null | head -20)",
+      "Bash(cd:*)",
+      "Bash(C:/Users/SNight/anaconda3/envs/env_isaaclab/python.exe -m py_compile \\\\\n  \"D:/Graduation-Project/tests/sim_required/test_go1_ros2cmd_morl_registration.py\" \\\\\n  \"D:/Graduation-Project/tests/unit/test_morl_weight_override.py\" \\\\\n  \"D:/Graduation-Project/tests/unit/test_morl_metric_computation.py\" \\\\\n  && echo \"Syntax OK\")",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.astrbot.app)",
+      "Bash(gh repo:*)"
     ]
   },
   "outputStyle": "Explanatory"

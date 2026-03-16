@@ -21,6 +21,7 @@ from isaaclab.app import AppLauncher
 # local imports
 import cli_args  # isort: skip
 from checkpoint_utils import resolve_eval_checkpoint_path  # isort: skip
+from morl_cli import MORL_TASK_IDS as _MORL_TASK_IDS  # isort: skip
 
 # add argparse arguments
 parser = argparse.ArgumentParser(
@@ -138,7 +139,7 @@ _ROS2_TASK_IDS = {
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-Play-v0",
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-v0",
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-Play-v0",
-}
+} | set(_MORL_TASK_IDS)
 
 
 if args_cli.task in _ROS2_TASK_IDS and sys.platform == "win32":

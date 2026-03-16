@@ -20,6 +20,12 @@ from isaaclab.app import AppLauncher
 
 # local imports
 import cli_args  # isort: skip
+from morl_cli import (  # isort: skip
+    MORL_TASK_IDS as _MORL_TASK_IDS,
+    apply_morl_weight_override,
+    format_morl_weights,
+    parse_morl_weights,
+)
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
@@ -80,6 +86,12 @@ parser.add_argument(
     help="Override PPO entropy coefficient (applied AFTER ros2_tracking_tune).",
 )
 parser.add_argument(
+    "--morl_weights",
+    type=str,
+    default=None,
+    help="Override MORL primary weights as 'speed,energy,smooth,stable'. Must sum to 1.0.",
+)
+parser.add_argument(
     "--export_io_descriptors",
     action="store_true",
     default=False,
@@ -127,7 +139,7 @@ _ROS2_TASK_IDS = {
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-Play-v0",
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-v0",
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-Play-v0",
-}
+} | set(_MORL_TASK_IDS)
 
 
 def _apply_ros2_tracking_tune(agent_cfg: "RslRlBaseRunnerCfg") -> None:
@@ -298,6 +310,13 @@ def main(
         if args_cli.max_iterations is not None
         else agent_cfg.max_iterations
     )
+
+    if args_cli.morl_weights is not None:
+        if args_cli.task not in _MORL_TASK_IDS:
+            raise ValueError("--morl_weights can only be used with MORL task ids.")
+        morl_weights = parse_morl_weights(args_cli.morl_weights)
+        apply_morl_weight_override(env_cfg, morl_weights)
+        print(f"[MORL Override] {format_morl_weights(morl_weights)}")
 
     if args_cli.task in _ROS2_TASK_IDS and not args_cli.disable_ros2_tracking_tune:
         _apply_ros2_tracking_tune(agent_cfg)

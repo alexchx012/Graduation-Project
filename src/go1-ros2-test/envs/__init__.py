@@ -238,3 +238,29 @@ gym.register(
         "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
     },
 )
+
+##
+# Phase MORL ��� Multi-Objective Reinforcement Learning tasks.
+##
+
+# MORL Train: 4 primary objectives (speed, energy, smooth, stable)
+gym.register(
+    id="Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.morl_env_cfg:UnitreeGo1MORLEnvCfg",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+# MORL Play: evaluation mode with 4 primary objectives
+gym.register(
+    id="Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.morl_env_cfg:UnitreeGo1MORLEnvCfg_PLAY",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
