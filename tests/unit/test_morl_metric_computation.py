@@ -106,3 +106,49 @@ def test_summarize_morl_metrics_returns_scalar_mapping():
 
     assert set(summary) == {"J_speed", "J_energy", "J_smooth", "J_stable"}
     assert all(isinstance(value, float) for value in summary.values())
+
+
+def test_summarize_morl_metrics_handles_multi_env_tensors():
+    """Regression: compute_j_* returns (N_envs,) tensors; _to_scalar must handle them."""
+    metrics = _load_metrics_module()
+
+    n_envs, t_steps = 4, 10
+    summary = metrics.summarize_morl_metrics(
+        commanded_xy=torch.ones(n_envs, t_steps, 2),
+        actual_xy=torch.ones(n_envs, t_steps, 2) * 0.9,
+        joint_torque=torch.ones(n_envs, t_steps, 12),
+        joint_vel=torch.ones(n_envs, t_steps, 12),
+        actions=torch.randn(n_envs, t_steps, 12),
+        ang_vel_xy=torch.randn(n_envs, t_steps, 2) * 0.1,
+        pose_fluctuation=torch.randn(n_envs, t_steps, 2) * 0.05,
+        dt=0.02,
+        distance=torch.ones(n_envs) * 0.5,
+    )
+
+    assert set(summary) == {"J_speed", "J_energy", "J_smooth", "J_stable"}
+    assert all(isinstance(v, float) for v in summary.values())
+
+
+def test_compute_path_length_integrates_planar_speed():
+    metrics = _load_metrics_module()
+
+    actual_xy = torch.tensor(
+        [
+            [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
+            [[0.0, 2.0], [0.0, 2.0], [0.0, 2.0]],
+        ]
+    )
+
+    distance = metrics.compute_path_length(actual_xy, dt=0.5)
+
+    torch.testing.assert_close(distance, torch.tensor([1.5, 3.0]))
+
+
+def test_compute_recovery_time_returns_mean_excursion_duration():
+    metrics = _load_metrics_module()
+
+    error_series = torch.tensor([0.1, 0.4, 0.5, 0.1, 0.1, 0.6, 0.1])
+
+    recovery = metrics.compute_recovery_time(error_series, threshold=0.3, dt=0.2)
+
+    torch.testing.assert_close(recovery, torch.tensor(0.3))

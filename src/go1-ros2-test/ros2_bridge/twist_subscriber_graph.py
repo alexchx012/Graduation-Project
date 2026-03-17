@@ -168,21 +168,55 @@ class Ros2TwistSubscriberAdapter:
             print(f"[ROS2 Bridge] Sync #{self._sync_count}: cmd={cmd}, rx_time={rx_time:.2f}")
 
     def wait_for_first_message(self, timeout_s: float = 15.0) -> bool:
-        """Block until first non-zero command arrives or timeout."""
+        """Block until first non-zero command arrives or timeout.
+
+        Prints periodic diagnostics every 3 seconds so that silent hangs
+        are visible in CI / batch logs.
+        """
         import rclpy
 
         start = time.time()
+        last_diag = start
+        diag_interval = 3.0
+
+        print(
+            f"[ROS2 Bridge] Waiting up to {timeout_s:.0f}s for first message "
+            f"on '{self.cfg.topic_name}'..."
+        )
+
         while time.time() - start < timeout_s:
             if self._node is not None:
                 rclpy.spin_once(self._node, timeout_sec=0.1)
 
             with self._lock:
                 if any(abs(v) > 1.0e-9 for v in self._last_cmd):
-                    _logger.debug(f"First ROS2 message received after {time.time() - start:.2f}s")
+                    elapsed = time.time() - start
+                    print(
+                        f"[ROS2 Bridge] First message received after {elapsed:.2f}s: "
+                        f"cmd={self._last_cmd}"
+                    )
                     return True
+
+            now = time.time()
+            if now - last_diag >= diag_interval:
+                elapsed = now - start
+                remaining = timeout_s - elapsed
+                print(
+                    f"[ROS2 Bridge] Still waiting... "
+                    f"({elapsed:.1f}s elapsed, {remaining:.1f}s remaining, "
+                    f"topic='{self.cfg.topic_name}')"
+                )
+                last_diag = now
 
             time.sleep(0.05)
 
+        elapsed = time.time() - start
+        print(
+            f"[ROS2 Bridge] TIMEOUT after {elapsed:.1f}s — no message received "
+            f"on '{self.cfg.topic_name}'. "
+            f"Check: 1) WSL publisher running?  2) DDS discovery healthy?  "
+            f"3) ROS_DOMAIN_ID matching?"
+        )
         return False
 
     def close(self):

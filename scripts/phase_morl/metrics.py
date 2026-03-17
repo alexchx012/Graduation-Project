@@ -63,6 +63,60 @@ def compute_j_stable(
     )
 
 
+def compute_path_length(actual_xy: torch.Tensor, dt: float) -> torch.Tensor:
+    """Approximate traveled planar path length from velocity samples."""
+
+    planar_speed = torch.linalg.vector_norm(actual_xy, dim=-1)
+    return torch.sum(planar_speed, dim=-1) * dt
+
+
+def compute_recovery_time(
+    error_series: torch.Tensor,
+    threshold: float,
+    dt: float,
+    min_stable_steps: int = 1,
+) -> torch.Tensor:
+    """Average duration of excursions above threshold until recovery.
+
+    Returns NaN when no completed recovery event is found.
+    """
+
+    if error_series.ndim != 1:
+        raise ValueError(f"Expected a 1-D error series, got shape {tuple(error_series.shape)}.")
+    if min_stable_steps < 1:
+        raise ValueError("min_stable_steps must be >= 1.")
+
+    above = error_series > threshold
+    durations: list[float] = []
+    excursion_len = 0
+    stable_len = 0
+    in_excursion = False
+
+    for is_above in above.tolist():
+        if is_above:
+            if not in_excursion:
+                in_excursion = True
+                excursion_len = 0
+            excursion_len += 1
+            stable_len = 0
+            continue
+
+        if not in_excursion:
+            continue
+
+        stable_len += 1
+        if stable_len >= min_stable_steps:
+            durations.append(excursion_len * dt)
+            in_excursion = False
+            excursion_len = 0
+            stable_len = 0
+
+    if not durations:
+        return torch.tensor(float("nan"), dtype=error_series.dtype)
+
+    return torch.tensor(sum(durations) / len(durations), dtype=error_series.dtype)
+
+
 def summarize_morl_metrics(
     *,
     commanded_xy: torch.Tensor,
@@ -87,6 +141,11 @@ def summarize_morl_metrics(
 
 
 def _to_scalar(value: torch.Tensor) -> float:
-    if value.numel() != 1:
-        raise ValueError(f"Expected a scalar metric tensor, got shape {tuple(value.shape)}.")
-    return float(value.item())
+    """Convert a metric tensor to a Python float.
+
+    If the tensor has more than one element (e.g. per-env metrics with shape
+    ``(N_envs,)``), the mean across all elements is returned.
+    """
+    if value.numel() == 1:
+        return float(value.item())
+    return float(value.mean().item())
