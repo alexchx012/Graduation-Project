@@ -31,7 +31,7 @@ else:
 def morl_track_vel_exp(
     env: ManagerBasedRLEnv,
     command_name: str = "base_velocity",
-    scale: float = 5.0,
+    scale: float = 1.0,
 ) -> torch.Tensor:
     """Primary MORL speed objective based on xy velocity tracking error."""
     asset = env.scene["robot"]

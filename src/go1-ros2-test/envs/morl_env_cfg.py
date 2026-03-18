@@ -38,7 +38,7 @@ def _configure_morl_rewards(cfg) -> None:
     cfg.rewards.track_lin_vel_xy_exp.weight = 0.25
     cfg.rewards.track_lin_vel_xy_exp.params = {
         "command_name": "base_velocity",
-        "scale": 5.0,
+        "scale": 1.0,  # was 5.0; lowered to escape dead-gradient plateau (see 2026-3-18 log)
     }
 
     cfg.rewards.morl_energy = RewTerm(

@@ -13,7 +13,8 @@
       "Bash(C:/Users/SNight/anaconda3/envs/env_isaaclab/python.exe -m py_compile \\\\\n  \"D:/Graduation-Project/tests/sim_required/test_go1_ros2cmd_morl_registration.py\" \\\\\n  \"D:/Graduation-Project/tests/unit/test_morl_weight_override.py\" \\\\\n  \"D:/Graduation-Project/tests/unit/test_morl_metric_computation.py\" \\\\\n  && echo \"Syntax OK\")",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:docs.astrbot.app)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(find:*)"
     ]
   },
   "outputStyle": "Explanatory"
