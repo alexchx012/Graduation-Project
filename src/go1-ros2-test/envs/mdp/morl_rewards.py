@@ -48,9 +48,14 @@ def morl_track_vel_exp(
 def morl_energy_power_exp(
     env: ManagerBasedRLEnv,
     asset_cfg: SceneEntityCfg | None = None,
-    scale: float = 1.0,
+    scale: float = 0.005,
 ) -> torch.Tensor:
-    """Primary MORL energy objective based on joint power."""
+    """Primary MORL energy objective based on joint power.
+
+    Go1 12-joint total mechanical power typically ranges 5-600 W.
+    scale=0.005 keeps exp(-scale*power) in the informative gradient zone
+    across the full operating range (see 2026-3-19 log).
+    """
     asset_name, joint_ids = _resolve_asset_cfg(asset_cfg)
     asset = env.scene[asset_name]
     power = torch.sum(

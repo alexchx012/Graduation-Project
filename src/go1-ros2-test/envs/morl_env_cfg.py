@@ -46,7 +46,7 @@ def _configure_morl_rewards(cfg) -> None:
         weight=0.25,
         params={
             "asset_cfg": SceneEntityCfg("robot"),
-            "scale": 1.0,
+            "scale": 0.005,  # was 1.0; lowered to match Go1 power range ~5-600W (see 2026-3-19 log)
         },
     )
     cfg.rewards.morl_smooth = RewTerm(
