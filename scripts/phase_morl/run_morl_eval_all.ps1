@@ -201,6 +201,18 @@ function Invoke-MorlEvaluation {
     $runName = $RunDir.Name
     $summaryPath = Join-Path $SummaryRoot "$runName.json"
 
+    $modelPath = Join-Path $RunDir.FullName $Checkpoint
+    if (-not (Test-Path $modelPath)) {
+        Write-Host "[SKIP] Checkpoint not found: $modelPath"
+        $script:EvaluationResults.Add([pscustomobject]@{
+            RunName = $runName
+            Passed = $false
+            Skipped = $true
+            SummaryJson = "No checkpoint"
+        })
+        return
+    }
+
     if ($SkipExisting -and (Test-Path $summaryPath)) {
         Write-Host "[SKIP] Summary already exists: $summaryPath"
         $script:EvaluationResults.Add([pscustomobject]@{

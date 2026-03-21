@@ -14,7 +14,12 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:docs.astrbot.app)",
       "Bash(gh repo:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(for policy:*)",
+      "Bash(do for:*)",
+      "Bash(do echo:*)",
+      "Bash(ls -lt logs/sweep/phase_morl_train/*.json logs/sweep/phase_morl_train/*.log)",
+      "Bash(ls:*)"
     ]
   },
   "outputStyle": "Explanatory"
