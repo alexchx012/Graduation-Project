@@ -30,18 +30,24 @@ class UnitreeGo1Ros2CmdRoughEnvCfg(UnitreeGo1RoughEnvCfg):
     def __post_init__(self):
         super().__post_init__()
 
-        original_ranges = self.commands.base_velocity.ranges
+        # [2026-03-22] ROS2 命令源已禁用，使用 Isaac Lab 标准随机命令生成器
+        # 原因：ROS2 动态连接导致命令源不一致，影响训练结果可比性
+        # 详见：docs/daily_logs/2026-3/2026-03-21/2026-3-21.md
+        #
+        # 父类 UnitreeGo1RoughEnvCfg 的默认命令源（UniformVelocityCommand）会被保留，
+        # 它会在每次环境重置时生成随机速度命令，符合 MORL 多场景训练的设计初衷。
 
-        self.commands.base_velocity = mdp.Ros2VelocityCommandCfg(
-            command_attr="ros2_latest_cmd_vel",
-            command_stamp_attr="ros2_latest_cmd_stamp_s",
-            cmd_timeout_s=_ROS2_CMD_TIMEOUT_S,
-            ranges=mdp.Ros2VelocityCommandCfg.Ranges(
-                lin_vel_x=original_ranges.lin_vel_x,
-                lin_vel_y=original_ranges.lin_vel_y,
-                ang_vel_z=original_ranges.ang_vel_z,
-            ),
-        )
+        # original_ranges = self.commands.base_velocity.ranges
+        # self.commands.base_velocity = mdp.Ros2VelocityCommandCfg(
+        #     command_attr="ros2_latest_cmd_vel",
+        #     command_stamp_attr="ros2_latest_cmd_stamp_s",
+        #     cmd_timeout_s=_ROS2_CMD_TIMEOUT_S,
+        #     ranges=mdp.Ros2VelocityCommandCfg.Ranges(
+        #         lin_vel_x=original_ranges.lin_vel_x,
+        #         lin_vel_y=original_ranges.lin_vel_y,
+        #         ang_vel_z=original_ranges.ang_vel_z,
+        #     ),
+        # )
 
 
 @configclass
@@ -51,15 +57,17 @@ class UnitreeGo1Ros2CmdRoughEnvCfg_PLAY(UnitreeGo1RoughEnvCfg_PLAY):
     def __post_init__(self):
         super().__post_init__()
 
-        original_ranges = self.commands.base_velocity.ranges
+        # [2026-03-22] ROS2 命令源已禁用（同训练配置）
+        # 使用 Isaac Lab 标准随机命令生成器
 
-        self.commands.base_velocity = mdp.Ros2VelocityCommandCfg(
-            command_attr="ros2_latest_cmd_vel",
-            command_stamp_attr="ros2_latest_cmd_stamp_s",
-            cmd_timeout_s=_ROS2_CMD_TIMEOUT_S,
-            ranges=mdp.Ros2VelocityCommandCfg.Ranges(
-                lin_vel_x=original_ranges.lin_vel_x,
-                lin_vel_y=original_ranges.lin_vel_y,
-                ang_vel_z=original_ranges.ang_vel_z,
-            ),
-        )
+        # original_ranges = self.commands.base_velocity.ranges
+        # self.commands.base_velocity = mdp.Ros2VelocityCommandCfg(
+        #     command_attr="ros2_latest_cmd_vel",
+        #     command_stamp_attr="ros2_latest_cmd_stamp_s",
+        #     cmd_timeout_s=_ROS2_CMD_TIMEOUT_S,
+        #     ranges=mdp.Ros2VelocityCommandCfg.Ranges(
+        #         lin_vel_x=original_ranges.lin_vel_x,
+        #         lin_vel_y=original_ranges.lin_vel_y,
+        #         ang_vel_z=original_ranges.ang_vel_z,
+        #     ),
+        # )

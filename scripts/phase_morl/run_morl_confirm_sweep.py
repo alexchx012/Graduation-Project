@@ -7,13 +7,13 @@ Phase MORL M8: 代表性策略补训脚本
 - P10: 从 P5-P10 中选出的偏稳定折中点
 
 默认训练配置：
-- seeds = 43,44
+- seeds = 42,43,44  (包含 seed42 重训)
 - num_envs = 4096
 - max_iterations = 1500
 - clip_param = 0.3
 
 工程特性复用 run_morl_train_sweep.py：
-- ROS2 Publisher 生命周期管理 + Watchdog
+- ROS2 Publisher 已禁用（使用 Isaac Lab 随机命令）
 - Isaac Sim 瞬态错误自动重试
 - Checkpoint / env.yaml / agent.yaml 核验
 - 断点续训
@@ -22,17 +22,16 @@ Phase MORL M8: 代表性策略补训脚本
 使用方法:
     conda activate env_isaaclab
 
-    # 运行默认 5 策略 × 2 seeds
+    # 运行默认 5 策略 × 3 seeds（ROS2 已禁用）
     python scripts/phase_morl/run_morl_confirm_sweep.py
 
     # 只运行部分策略或自定义 seeds
     python scripts/phase_morl/run_morl_confirm_sweep.py --policy-ids P1,P10
     python scripts/phase_morl/run_morl_confirm_sweep.py --seeds 43
 
-    # Dry run / Resume / Skip ROS2
+    # Dry run / Resume
     python scripts/phase_morl/run_morl_confirm_sweep.py --dry-run
     python scripts/phase_morl/run_morl_confirm_sweep.py --resume
-    python scripts/phase_morl/run_morl_confirm_sweep.py --skip-ros2
 """
 
 from __future__ import annotations
@@ -63,7 +62,7 @@ from run_morl_train_sweep import (
 
 
 DEFAULT_CONFIRM_POLICY_IDS = ("P1", "P2", "P3", "P4", "P10")
-DEFAULT_CONFIRM_SEEDS = [43, 44]
+DEFAULT_CONFIRM_SEEDS = [42, 43, 44]  # [2026-03-22] 包含 seed42 重训（ROS2 命令源修复后）
 
 
 def _select_confirmation_experiments(policy_ids_raw: str | None) -> list[dict]:
@@ -97,7 +96,7 @@ def main():
     parser.add_argument(
         "--seeds",
         type=str,
-        default="43,44",
+        default="42,43,44",
         help="逗号分隔种子列表（默认 43,44）",
     )
     parser.add_argument("--num-envs", type=int, default=NUM_ENVS, help="训练 env 数量")
@@ -115,6 +114,11 @@ def main():
     )
     args = parser.parse_args()
 
+    # [2026-03-22] 强制禁用 ROS2 publisher 管理
+    # 原因：rough_env_cfg.py 已禁用 ROS2 命令源，使用 Isaac Lab 标准随机命令生成器
+    # 详见：docs/daily_logs/2026-3/2026-03-22/2026-3-22.md
+    args.skip_ros2 = True
+
     project_root = args.project_root or Path(__file__).resolve().parents[2]
     if not (project_root / "CLAUDE.md").exists():
         print(f"[ERROR] 项目根目录无效: {project_root}")
@@ -129,8 +133,10 @@ def main():
     seeds = _parse_seeds(args.seeds) if args.seeds else DEFAULT_CONFIRM_SEEDS
     total_runs = len(experiments) * len(seeds)
 
-    if not check_prerequisites(project_root, args.ros2_script):
-        print("[ERROR] 前置检查失败")
+    # [2026-03-22] 简化前置检查：只检查训练脚本，跳过 ROS2 检查
+    train_script = project_root / "scripts" / "go1-ros2-test" / "train.py"
+    if not train_script.exists():
+        print(f"[ERROR] 训练脚本不存在: {train_script}")
         sys.exit(1)
 
     print(f"\n[INFO] 默认确认策略: {DEFAULT_CONFIRM_POLICY_IDS}")

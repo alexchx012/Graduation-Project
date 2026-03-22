@@ -19,7 +19,8 @@
       "Bash(do for:*)",
       "Bash(do echo:*)",
       "Bash(ls -lt logs/sweep/phase_morl_train/*.json logs/sweep/phase_morl_train/*.log)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(python scripts/phase_morl/run_morl_confirm_sweep.py --dry-run)"
     ]
   },
   "outputStyle": "Explanatory"
