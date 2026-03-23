@@ -81,6 +81,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="If set, allow evaluation to continue even when no ROS2 message is received. "
         "Without this flag, a ROS2 timeout is a fatal error.",
     )
+    parser.add_argument(
+        "--skip_ros2",
+        action="store_true",
+        default=False,
+        help="Skip ROS2 bridge setup entirely. Use Isaac Lab internal command generator "
+        "instead of WSL ROS2 publisher. This is the correct mode when the env config "
+        "already uses the built-in random command generator.",
+    )
     return parser
 
 
@@ -91,6 +99,26 @@ def infer_policy_id(load_run: str | None) -> str | None:
     base_name = os.path.basename(normalized)
     match = re.search(r"(morl_p\d+_seed\d+)$", base_name)
     return match.group(1) if match else base_name
+
+
+def _extract_velocity_metrics(command_term, commanded_velocity, root_lin_vel_b) -> tuple[float, float, float]:
+    """Read tracked velocity metrics from the command term or derive them from tensors."""
+    metrics = getattr(command_term, "metrics", {})
+    required_metric_keys = ("cmd_vx", "vx_meas", "vx_abs_err")
+    if all(metric_key in metrics for metric_key in required_metric_keys):
+        return (
+            float(metrics["cmd_vx"].mean().item()),
+            float(metrics["vx_meas"].mean().item()),
+            float(metrics["vx_abs_err"].mean().item()),
+        )
+
+    cmd_vx_tensor = commanded_velocity[:, 0]
+    vx_meas_tensor = root_lin_vel_b[:, 0]
+    return (
+        float(cmd_vx_tensor.mean().item()),
+        float(vx_meas_tensor.mean().item()),
+        float((cmd_vx_tensor - vx_meas_tensor).abs().mean().item()),
+    )
 
 
 def main() -> None:
@@ -198,7 +226,8 @@ def _run_with_sim(args_cli, simulation_app) -> None:
         env = gym.make(args_cli.task, cfg=env_cfg)
 
         ros2_bridge_adapter = None
-        if args_cli.task in ROS2_MORL_TASK_IDS:
+        skip_ros2 = getattr(args_cli, "skip_ros2", False)
+        if args_cli.task in ROS2_MORL_TASK_IDS and not skip_ros2:
             from isaacsim.core.utils.extensions import enable_extension
             from robot_lab.ros2_bridge import Ros2TwistBridgeCfg, Ros2TwistSubscriberGraphAdapter
 
@@ -264,6 +293,16 @@ def _run_with_sim(args_cli, simulation_app) -> None:
         robot = raw_env.scene["robot"]
         step_dt = float(raw_env.step_dt)
 
+        required_metric_keys = ("cmd_vx", "vx_meas", "vx_abs_err")
+        missing_metric_keys = tuple(
+            metric_key for metric_key in required_metric_keys if metric_key not in command_term.metrics
+        )
+        if missing_metric_keys:
+            print(
+                "[MORL_EVAL] base_velocity metrics missing "
+                f"{missing_metric_keys}; falling back to direct tensor-derived tracking metrics."
+            )
+
         obs = env.get_observations()
         start_time = time.time()
 
@@ -293,19 +332,22 @@ def _run_with_sim(args_cli, simulation_app) -> None:
             if step_idx < args_cli.warmup_steps:
                 continue
 
-            commanded_xy_steps.append(
-                raw_env.command_manager.get_command("base_velocity")[:, :2].detach().cpu()
-            )
-            actual_xy_steps.append(robot.data.root_lin_vel_b[:, :2].detach().cpu())
+            commanded_velocity = raw_env.command_manager.get_command("base_velocity")
+            root_lin_vel_b = robot.data.root_lin_vel_b
+
+            commanded_xy_steps.append(commanded_velocity[:, :2].detach().cpu())
+            actual_xy_steps.append(root_lin_vel_b[:, :2].detach().cpu())
             joint_torque_steps.append(robot.data.applied_torque.detach().cpu())
             joint_vel_steps.append(robot.data.joint_vel.detach().cpu())
             actions_steps.append(actions.detach().cpu())
             ang_vel_xy_steps.append(robot.data.root_ang_vel_b[:, :2].detach().cpu())
             pose_fluctuation_steps.append(_compute_pose_fluctuation(robot.data.root_quat_w).detach().cpu())
 
-            cmd_vx = float(command_term.metrics["cmd_vx"].mean().item())
-            vx_meas = float(command_term.metrics["vx_meas"].mean().item())
-            vx_abs_err = float(command_term.metrics["vx_abs_err"].mean().item())
+            cmd_vx, vx_meas, vx_abs_err = _extract_velocity_metrics(
+                command_term=command_term,
+                commanded_velocity=commanded_velocity,
+                root_lin_vel_b=root_lin_vel_b,
+            )
             timeout_rate = float(term_manager.time_outs.float().mean().item())
             if has_base_contact_term:
                 base_contact_rate = float(term_manager.get_term("base_contact").float().mean().item())
@@ -403,10 +445,12 @@ def _run_with_sim(args_cli, simulation_app) -> None:
         print("[MORL_EVAL_JSON] " + json.dumps(summary, ensure_ascii=True))
 
         # Defence-in-depth: reject zero-command results unless explicitly allowed
+        # Skip this check when --skip_ros2 is set (using internal command generator)
         if (
             args_cli.task in ROS2_MORL_TASK_IDS
             and abs(summary["mean_cmd_vx"]) < 1e-6
             and not getattr(args_cli, "allow_no_ros2", False)
+            and not getattr(args_cli, "skip_ros2", False)
         ):
             raise RuntimeError(
                 "Evaluation completed but mean_cmd_vx ≈ 0.0, indicating no ROS2 "
@@ -432,7 +476,7 @@ def _run_with_sim(args_cli, simulation_app) -> None:
 
 
 def _bootstrap_windows_ros2_env(args_cli) -> None:
-    if args_cli.task not in ROS2_MORL_TASK_IDS or sys.platform != "win32":
+    if args_cli.task not in ROS2_MORL_TASK_IDS or sys.platform != "win32" or getattr(args_cli, "skip_ros2", False):
         return
 
     try:

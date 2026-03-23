@@ -96,3 +96,39 @@ def test_run_morl_eval_rejects_zero_cmd_vx_results():
 
     assert 'mean_cmd_vx' in source
     assert "mean_cmd_vx ≈ 0.0" in source or 'mean_cmd_vx' in source
+
+
+def test_extract_velocity_metrics_falls_back_to_command_and_robot_tensors():
+    import pytest
+    import torch
+
+    module = _load_module()
+
+    class _FakeCommandTerm:
+        def __init__(self):
+            self.metrics = {}
+
+    commanded_velocity = torch.tensor(
+        [
+            [0.8, 0.1, 0.0],
+            [1.2, -0.1, 0.0],
+        ],
+        dtype=torch.float32,
+    )
+    root_lin_vel_b = torch.tensor(
+        [
+            [0.75, 0.0, 0.0],
+            [1.05, 0.0, 0.0],
+        ],
+        dtype=torch.float32,
+    )
+
+    cmd_vx, vx_meas, vx_abs_err = module._extract_velocity_metrics(
+        command_term=_FakeCommandTerm(),
+        commanded_velocity=commanded_velocity,
+        root_lin_vel_b=root_lin_vel_b,
+    )
+
+    assert cmd_vx == pytest.approx(1.0)
+    assert vx_meas == pytest.approx(0.9)
+    assert vx_abs_err == pytest.approx(0.1)

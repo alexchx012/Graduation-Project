@@ -242,6 +242,9 @@ function Invoke-MorlEvaluation {
         "--summary_json", $summaryPath,
         "--headless"
     )
+    if ($SkipRos2) {
+        $args += "--skip_ros2"
+    }
 
     Write-Host "  CMD: python $($args -join ' ')"
     if ($DryRun) {
