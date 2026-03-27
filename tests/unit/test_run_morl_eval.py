@@ -37,6 +37,7 @@ def test_build_parser_has_morl_eval_defaults():
     assert args.eval_steps == 3000
     assert args.warmup_steps == 300
     assert args.summary_json is None
+    assert args.scenario is None
 
 
 def test_infer_policy_id_from_load_run_directory_name():
@@ -100,7 +101,8 @@ def test_run_morl_eval_rejects_zero_cmd_vx_results():
 
 def test_extract_velocity_metrics_falls_back_to_command_and_robot_tensors():
     import pytest
-    import torch
+
+    torch = pytest.importorskip("torch")
 
     module = _load_module()
 
@@ -132,3 +134,120 @@ def test_extract_velocity_metrics_falls_back_to_command_and_robot_tensors():
     assert cmd_vx == pytest.approx(1.0)
     assert vx_meas == pytest.approx(0.9)
     assert vx_abs_err == pytest.approx(0.1)
+
+
+def test_run_morl_eval_parser_accepts_stage4_scenario_arg():
+    module = _load_module()
+
+    parser = module.build_parser()
+    args = parser.parse_args(["--scenario", "S4"])
+
+    assert args.scenario == "S4"
+
+
+def test_apply_scenario_overrides_sets_fixed_command_ranges_and_plane_mode():
+    from types import SimpleNamespace
+
+    module = _load_module()
+
+    env_cfg = SimpleNamespace(
+        commands=SimpleNamespace(
+            base_velocity=SimpleNamespace(
+                heading_command=True,
+                rel_heading_envs=1.0,
+                ranges=SimpleNamespace(
+                    lin_vel_x=(-1.0, 1.0),
+                    lin_vel_y=(-1.0, 1.0),
+                    ang_vel_z=(-1.0, 1.0),
+                    heading=(-3.14, 3.14),
+                ),
+            )
+        ),
+        scene=SimpleNamespace(
+            terrain=SimpleNamespace(
+                terrain_type="generator",
+                terrain_generator=SimpleNamespace(
+                    curriculum=True,
+                    sub_terrains={"old": object()},
+                ),
+            )
+        ),
+        events=SimpleNamespace(
+            push_robot="push",
+            base_external_force_torque="force",
+            randomize_apply_external_force_torque="random-force",
+        ),
+    )
+
+    meta = module.apply_scenario_overrides(env_cfg, "S1")
+
+    assert env_cfg.commands.base_velocity.ranges.lin_vel_x == (1.0, 1.0)
+    assert env_cfg.commands.base_velocity.ranges.lin_vel_y == (0.0, 0.0)
+    assert env_cfg.commands.base_velocity.ranges.ang_vel_z == (0.0, 0.0)
+    assert env_cfg.commands.base_velocity.heading_command is False
+    assert env_cfg.commands.base_velocity.rel_heading_envs == 0.0
+    assert env_cfg.scene.terrain.terrain_type == "plane"
+    assert meta["scenario_id"] == "S1"
+    assert meta["cmd_vx"] == 1.0
+
+
+def test_apply_scenario_overrides_marks_s6_as_disturbance_mode():
+    from types import SimpleNamespace
+
+    module = _load_module()
+
+    env_cfg = SimpleNamespace(
+        commands=SimpleNamespace(
+            base_velocity=SimpleNamespace(
+                heading_command=True,
+                rel_heading_envs=1.0,
+                ranges=SimpleNamespace(
+                    lin_vel_x=(-1.0, 1.0),
+                    lin_vel_y=(-1.0, 1.0),
+                    ang_vel_z=(-1.0, 1.0),
+                    heading=(-3.14, 3.14),
+                ),
+            )
+        ),
+        scene=SimpleNamespace(
+            terrain=SimpleNamespace(
+                terrain_type="generator",
+                terrain_generator=SimpleNamespace(
+                    curriculum=True,
+                    sub_terrains={"old": object()},
+                ),
+            )
+        ),
+        events=SimpleNamespace(
+            push_robot=None,
+            base_external_force_torque=SimpleNamespace(params={"force_range": (0.0, 0.0)}),
+            randomize_apply_external_force_torque="random-force",
+        ),
+    )
+
+    meta = module.apply_scenario_overrides(env_cfg, "S6")
+
+    assert meta["scenario_id"] == "S6"
+    assert meta["disturbance_mode"] != "none"
+
+
+def test_build_summary_metadata_includes_stage4_fields():
+    module = _load_module()
+
+    metadata = module.build_summary_metadata(
+        scenario_metadata={
+            "scenario_id": "S3",
+            "scenario_name": "uphill_20deg",
+            "terrain_mode": "slope_up",
+            "cmd_vx": 0.8,
+            "disturbance_mode": "none",
+            "analysis_group": "main",
+        }
+    )
+
+    assert metadata["scenario_id"] == "S3"
+    assert metadata["scenario_name"] == "uphill_20deg"
+    assert metadata["terrain_mode"] == "slope_up"
+    assert metadata["cmd_vx"] == 0.8
+    assert metadata["disturbance_mode"] == "none"
+    assert metadata["analysis_group"] == "main"

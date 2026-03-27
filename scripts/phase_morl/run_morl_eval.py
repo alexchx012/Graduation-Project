@@ -20,6 +20,8 @@ for path in (SCRIPT_DIR, GO1_SCRIPT_DIR):
     if path_str not in sys.path:
         sys.path.insert(0, path_str)
 
+from scenario_defs import get_scenario_spec, list_scenarios
+
 DEFAULT_TASK = "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-Play-v0"
 ROS2_MORL_TASK_IDS = {
     "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-v0",
@@ -75,6 +77,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--load_run", type=str, default=None, help="Run directory to evaluate.")
     parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint file name to load.")
     parser.add_argument(
+        "--scenario",
+        type=str,
+        choices=list_scenarios(),
+        default=None,
+        help="Optional Phase 4 scenario override applied before env creation.",
+    )
+    parser.add_argument(
         "--allow_no_ros2",
         action="store_true",
         default=False,
@@ -121,6 +130,141 @@ def _extract_velocity_metrics(command_term, commanded_velocity, root_lin_vel_b) 
     )
 
 
+def build_summary_metadata(scenario_metadata: dict[str, object] | None = None) -> dict[str, object]:
+    """Build a stable metadata block for scenario-aware summaries."""
+
+    metadata = {
+        "scenario_id": None,
+        "scenario_name": None,
+        "terrain_mode": None,
+        "cmd_vx": None,
+        "disturbance_mode": "none",
+        "analysis_group": "legacy",
+    }
+    if scenario_metadata:
+        metadata.update(scenario_metadata)
+    return metadata
+
+
+def _freeze_command_ranges(base_velocity_cfg, vx: float) -> None:
+    """Convert the stochastic velocity command into a fixed-command protocol."""
+
+    base_velocity_cfg.ranges.lin_vel_x = (vx, vx)
+    base_velocity_cfg.ranges.lin_vel_y = (0.0, 0.0)
+    base_velocity_cfg.ranges.ang_vel_z = (0.0, 0.0)
+
+    if hasattr(base_velocity_cfg.ranges, "heading"):
+        base_velocity_cfg.ranges.heading = (0.0, 0.0)
+    if hasattr(base_velocity_cfg, "heading_command"):
+        base_velocity_cfg.heading_command = False
+    if hasattr(base_velocity_cfg, "rel_heading_envs"):
+        base_velocity_cfg.rel_heading_envs = 0.0
+    if hasattr(base_velocity_cfg, "rel_standing_envs"):
+        base_velocity_cfg.rel_standing_envs = 0.0
+    if hasattr(base_velocity_cfg, "debug_vis"):
+        base_velocity_cfg.debug_vis = False
+
+
+def _ensure_generator_terrain(terrain_cfg) -> object | None:
+    """Return terrain generator after switching the importer back to generator mode."""
+
+    if terrain_cfg is None:
+        return None
+    terrain_cfg.terrain_type = "generator"
+    terrain_generator = getattr(terrain_cfg, "terrain_generator", None)
+    if terrain_generator is not None:
+        terrain_generator.curriculum = False
+    return terrain_generator
+
+
+def apply_scenario_overrides(
+    env_cfg,
+    scenario_id: str,
+    *,
+    terrain_gen_module=None,
+    event_term_cls=None,
+    base_mdp_module=None,
+) -> dict[str, object]:
+    """Apply stage-4 scenario overrides on top of the MORL play env config."""
+
+    spec = get_scenario_spec(scenario_id)
+    _freeze_command_ranges(env_cfg.commands.base_velocity, spec.command_vx)
+
+    terrain_cfg = getattr(getattr(env_cfg, "scene", None), "terrain", None)
+
+    if spec.terrain_mode == "plane":
+        if terrain_cfg is not None:
+            terrain_cfg.terrain_type = "plane"
+            terrain_generator = getattr(terrain_cfg, "terrain_generator", None)
+            if terrain_generator is not None:
+                terrain_generator.curriculum = False
+    elif spec.terrain_mode == "slope_up":
+        if terrain_gen_module is None:
+            raise ValueError("terrain_gen_module is required for slope scenarios.")
+        terrain_generator = _ensure_generator_terrain(terrain_cfg)
+        if terrain_generator is not None:
+            terrain_generator.sub_terrains = {
+                "hf_pyramid_slope": terrain_gen_module.HfPyramidSlopedTerrainCfg(
+                    proportion=1.0,
+                    slope_range=(0.364, 0.364),
+                    platform_width=2.0,
+                    border_width=0.25,
+                )
+            }
+    elif spec.terrain_mode == "slope_down":
+        if terrain_gen_module is None:
+            raise ValueError("terrain_gen_module is required for downhill scenarios.")
+        terrain_generator = _ensure_generator_terrain(terrain_cfg)
+        if terrain_generator is not None:
+            terrain_generator.sub_terrains = {
+                "hf_pyramid_slope_inv": terrain_gen_module.HfInvertedPyramidSlopedTerrainCfg(
+                    proportion=1.0,
+                    slope_range=(0.364, 0.364),
+                    platform_width=2.0,
+                    border_width=0.25,
+                )
+            }
+    elif spec.terrain_mode == "stairs_15cm":
+        if terrain_gen_module is None:
+            raise ValueError("terrain_gen_module is required for stairs scenarios.")
+        terrain_generator = _ensure_generator_terrain(terrain_cfg)
+        if terrain_generator is not None:
+            terrain_generator.sub_terrains = {
+                "pyramid_stairs": terrain_gen_module.MeshPyramidStairsTerrainCfg(
+                    proportion=1.0,
+                    step_height_range=(0.15, 0.15),
+                    step_width=0.3,
+                    platform_width=3.0,
+                    border_width=1.0,
+                    holes=False,
+                )
+            }
+    else:
+        raise ValueError(f"Unsupported terrain_mode: {spec.terrain_mode}")
+
+    if spec.disturbance_mode == "velocity_push_equivalent":
+        if event_term_cls is not None and base_mdp_module is not None:
+            env_cfg.events.push_robot = event_term_cls(
+                func=base_mdp_module.push_by_setting_velocity,
+                mode="interval",
+                interval_range_s=(10.0, 15.0),
+                params={"velocity_range": {"x": (0.0, 0.0), "y": (-0.5, 0.5)}},
+            )
+        elif getattr(env_cfg, "events", None) is not None:
+            env_cfg.events.push_robot = {"mode": "velocity_push_equivalent"}
+
+    return build_summary_metadata(
+        {
+            "scenario_id": spec.scenario_id,
+            "scenario_name": spec.scenario_name,
+            "terrain_mode": spec.terrain_mode,
+            "cmd_vx": spec.command_vx,
+            "disturbance_mode": spec.disturbance_mode,
+            "analysis_group": spec.analysis_group,
+        }
+    )
+
+
 def main() -> None:
     parser = build_parser()
 
@@ -155,6 +299,9 @@ def _run_with_sim(args_cli, simulation_app) -> None:
     import platform
 
     import gymnasium as gym
+    import isaaclab.envs.mdp as base_mdp
+    import isaaclab.terrains as terrain_gen
+    from isaaclab.managers import EventTermCfg as EventTerm
     import torch
     from metrics import compute_path_length, compute_recovery_time, summarize_morl_metrics
     from packaging import version
@@ -205,9 +352,19 @@ def _run_with_sim(args_cli, simulation_app) -> None:
         if getattr(env_cfg.curriculum, "terrain_levels", None) is not None:
             env_cfg.curriculum.terrain_levels = None
         if getattr(env_cfg.scene, "terrain", None) is not None:
-            terrain_gen = getattr(env_cfg.scene.terrain, "terrain_generator", None)
-            if terrain_gen is not None:
-                terrain_gen.curriculum = False
+            terrain_generator = getattr(env_cfg.scene.terrain, "terrain_generator", None)
+            if terrain_generator is not None:
+                terrain_generator.curriculum = False
+
+        scenario_metadata = build_summary_metadata()
+        if args_cli.scenario:
+            scenario_metadata = apply_scenario_overrides(
+                env_cfg,
+                args_cli.scenario,
+                terrain_gen_module=terrain_gen,
+                event_term_cls=EventTerm,
+                base_mdp_module=base_mdp,
+            )
 
         log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
         log_root_path = os.path.abspath(log_root_path)
@@ -412,6 +569,7 @@ def _run_with_sim(args_cli, simulation_app) -> None:
         summary = {
             "policy_id": infer_policy_id(agent_cfg.load_run),
             "task": args_cli.task,
+            **scenario_metadata,
             "checkpoint": resume_path,
             "load_run": agent_cfg.load_run,
             "eval_steps": int(args_cli.eval_steps),
