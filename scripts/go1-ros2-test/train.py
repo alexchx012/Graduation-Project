@@ -19,9 +19,13 @@ import sys
 from isaaclab.app import AppLauncher
 
 # local imports
+from checkpoint_utils import resolve_training_checkpoint_path  # isort: skip
 import cli_args  # isort: skip
+from morl_reward_logging import attach_reward_contribution_logging  # isort: skip
 from morl_cli import (  # isort: skip
+    MORL_COMMAND_PROFILE_NAMES,
     MORL_TASK_IDS as _MORL_TASK_IDS,
+    apply_morl_command_profile,
     apply_morl_weight_override,
     format_morl_weights,
     parse_morl_weights,
@@ -90,6 +94,25 @@ parser.add_argument(
     type=str,
     default=None,
     help="Override MORL primary weights as 'speed,energy,smooth,stable'. Must sum to 1.0.",
+)
+parser.add_argument(
+    "--morl_command_profile",
+    type=str,
+    default=None,
+    choices=sorted(MORL_COMMAND_PROFILE_NAMES),
+    help="Override MORL training command distribution using a named repair profile.",
+)
+parser.add_argument(
+    "--init_checkpoint",
+    type=str,
+    default=None,
+    help="Initialize policy weights from a checkpoint path without enabling resume mode.",
+)
+parser.add_argument(
+    "--log_morl_reward_contributions",
+    action="store_true",
+    default=False,
+    help="Log MORL reward raw values and weighted contributions at episode reset.",
 )
 parser.add_argument(
     "--export_io_descriptors",
@@ -318,6 +341,15 @@ def main(
         apply_morl_weight_override(env_cfg, morl_weights)
         print(f"[MORL Override] {format_morl_weights(morl_weights)}")
 
+    if args_cli.morl_command_profile is not None:
+        if args_cli.task not in _MORL_TASK_IDS:
+            raise ValueError("--morl_command_profile can only be used with MORL task ids.")
+        apply_morl_command_profile(env_cfg, args_cli.morl_command_profile)
+        print(f"[MORL Command Profile] {args_cli.morl_command_profile}")
+
+    if args_cli.init_checkpoint is not None and args_cli.resume:
+        raise ValueError("--init_checkpoint cannot be combined with --resume.")
+
     if args_cli.task in _ROS2_TASK_IDS and not args_cli.disable_ros2_tracking_tune:
         _apply_ros2_tracking_tune(agent_cfg)
         print(
@@ -451,6 +483,15 @@ def main(
         args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None
     )
 
+    if args_cli.log_morl_reward_contributions and args_cli.task in _MORL_TASK_IDS:
+        diagnostic_terms = getattr(env_cfg, "morl_diagnostic_terms", None)
+        attach_reward_contribution_logging(
+            reward_manager=env.unwrapped.reward_manager,
+            max_episode_length_s=env.unwrapped.max_episode_length_s,
+            term_names=diagnostic_terms,
+        )
+        print("[MORL Diagnostics] Enabled reward raw/weighted contribution logging")
+
     # ROS2 bridge adapter setup for ROS2 command tasks.
     ros2_bridge_adapter = None
     if args_cli.task in _ROS2_TASK_IDS:
@@ -502,6 +543,13 @@ def main(
         resume_path = get_checkpoint_path(
             log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint
         )
+    init_checkpoint_path = None
+    if args_cli.init_checkpoint is not None:
+        init_checkpoint_path = resolve_training_checkpoint_path(
+            log_root_path=log_root_path,
+            load_run=agent_cfg.load_run,
+            checkpoint_arg=args_cli.init_checkpoint,
+        )
 
     # wrap for video recording
     if args_cli.video:
@@ -538,6 +586,11 @@ def main(
         print(f"[INFO]: Loading model checkpoint from: {resume_path}")
         # load previously trained model
         runner.load(resume_path)
+    elif init_checkpoint_path is not None:
+        print(f"[INFO]: Loading initial policy checkpoint from: {init_checkpoint_path}")
+        runner.load(init_checkpoint_path, load_optimizer=False)
+        runner.current_learning_iteration = 0
+        print("[INFO] Policy-only init enabled: optimizer state ignored, iteration reset to 0")
 
     # dump the configuration into log-directory
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)

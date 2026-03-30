@@ -264,3 +264,25 @@ gym.register(
         "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
     },
 )
+
+# MORL v2 Train: fixed locomotion scaffold + secondary MORL objectives
+gym.register(
+    id="Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-v2",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.morl_env_cfg_v2:UnitreeGo1MORLEnvCfg_v2",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)
+
+# MORL v2 Play: evaluation mode for fixed locomotion scaffold + secondary MORL objectives
+gym.register(
+    id="Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-Play-v2",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.morl_env_cfg_v2:UnitreeGo1MORLEnvCfg_v2_PLAY",
+        "rsl_rl_cfg_entry_point": _ROUGH_PPO_RUNNER,
+    },
+)

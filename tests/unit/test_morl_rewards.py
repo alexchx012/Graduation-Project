@@ -6,7 +6,9 @@
 from __future__ import annotations
 
 import importlib.util
+import inspect
 import sys
+import types
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
@@ -16,6 +18,7 @@ import torch
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE_PATH = ROOT / "src" / "go1-ros2-test" / "envs" / "mdp" / "morl_rewards.py"
+MODULE_V2_PATH = ROOT / "src" / "go1-ros2-test" / "envs" / "mdp" / "morl_rewards_v2.py"
 
 
 def _load_morl_rewards_module():
@@ -24,6 +27,33 @@ def _load_morl_rewards_module():
         return sys.modules[module_name]
 
     spec = importlib.util.spec_from_file_location(module_name, MODULE_PATH)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_morl_rewards_v2_module():
+    package_name = "_morl_pkg_under_test"
+    module_name = f"{package_name}.morl_rewards_v2"
+    if module_name in sys.modules:
+        return sys.modules[module_name]
+
+    if package_name not in sys.modules:
+        package = types.ModuleType(package_name)
+        package.__path__ = [str(MODULE_PATH.parent)]
+        sys.modules[package_name] = package
+
+    base_module_name = f"{package_name}.morl_rewards"
+    if base_module_name not in sys.modules:
+        base_spec = importlib.util.spec_from_file_location(base_module_name, MODULE_PATH)
+        base_module = importlib.util.module_from_spec(base_spec)
+        assert base_spec.loader is not None
+        sys.modules[base_module_name] = base_module
+        base_spec.loader.exec_module(base_module)
+
+    spec = importlib.util.spec_from_file_location(module_name, MODULE_V2_PATH)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     sys.modules[module_name] = module
@@ -184,3 +214,13 @@ def test_smoothness_and_stability_rewards_hit_one_at_zero_error(device: str):
 
     torch.testing.assert_close(smooth_reward, torch.ones(4, device=device))
     torch.testing.assert_close(stable_reward, torch.ones(4, device=device))
+
+
+def test_morl_v2_reward_signatures_match_v1_contract():
+    morl = _load_morl_rewards_module()
+    morl_v2 = _load_morl_rewards_v2_module()
+
+    assert inspect.signature(morl_v2.morl_v2_speed_pref) == inspect.signature(morl.morl_track_vel_exp)
+    assert inspect.signature(morl_v2.morl_v2_energy_pref) == inspect.signature(morl.morl_energy_power_exp)
+    assert inspect.signature(morl_v2.morl_v2_smooth_pref) == inspect.signature(morl.morl_action_smoothness_exp)
+    assert inspect.signature(morl_v2.morl_v2_stable_pref) == inspect.signature(morl.morl_stability_ang_vel_exp)

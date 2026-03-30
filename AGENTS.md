@@ -123,10 +123,12 @@ Known sync pairs:
 | `src/go1-ros2-test/envs/mdp/commands/ros2_velocity_command.py` | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/mdp/ros2_velocity_command.py`                                    |
 | `src/go1-ros2-test/envs/mdp/__init__.py`                      | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/mdp/__init__.py`                                               |
 | `src/go1-ros2-test/envs/mdp/morl_rewards.py`                  | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/mdp/morl_rewards.py`                                           |
+| `src/go1-ros2-test/envs/mdp/morl_rewards_v2.py`               | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/mdp/morl_rewards_v2.py`                                        |
 | `src/go1-ros2-test/envs/flat_env_cfg.py`                       | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg.py`               |
 | `src/go1-ros2-test/envs/rough_env_cfg.py`                      | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg.py`              |
 | `src/go1-ros2-test/envs/flat_env_cfg_variants.py`              | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/flat_env_cfg_variants.py`      |
 | `src/go1-ros2-test/envs/morl_env_cfg.py`                       | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/morl_env_cfg.py`               |
+| `src/go1-ros2-test/envs/morl_env_cfg_v2.py`                    | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/morl_env_cfg_v2.py`            |
 | `src/go1-ros2-test/envs/rough_env_cfg_terrain_eval.py`         | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg_terrain_eval.py` |
 | `src/go1-ros2-test/envs/rough_env_cfg_dr_variants.py`          | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/rough_env_cfg_dr_variants.py`  |
 | `src/go1-ros2-test/envs/__init__.py`                           | `robot_lab/source/robot_lab/robot_lab/tasks/manager_based/locomotion/velocity/config/quadruped/unitree_go1_ros2/__init__.py`                   |

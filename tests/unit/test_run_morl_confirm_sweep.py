@@ -30,7 +30,7 @@ def test_default_confirmation_set_matches_selected_m8_policies():
     module = _load_module()
 
     assert module.DEFAULT_CONFIRM_POLICY_IDS == ("P1", "P2", "P3", "P4", "P10")
-    assert module.DEFAULT_CONFIRM_SEEDS == [43, 44]
+    assert module.DEFAULT_CONFIRM_SEEDS == [42, 43, 44]
 
     selected = module._select_confirmation_experiments(None)
     assert [exp["policy_id"] for exp in selected] == list(module.DEFAULT_CONFIRM_POLICY_IDS)

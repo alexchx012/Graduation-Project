@@ -34,6 +34,18 @@ from . import mdp as local_mdp
 def _configure_morl_rewards(cfg) -> None:
     """Apply the MORL reward structure on top of the rough ROS2 baseline."""
 
+    cfg.morl_diagnostic_terms = (
+        "track_lin_vel_xy_exp",
+        "track_ang_vel_z_exp",
+        "lin_vel_z_l2",
+        "ang_vel_xy_l2",
+        "dof_acc_l2",
+        "feet_air_time",
+        "morl_energy",
+        "morl_smooth",
+        "morl_stable",
+    )
+
     cfg.rewards.track_lin_vel_xy_exp.func = local_mdp.morl_track_vel_exp
     cfg.rewards.track_lin_vel_xy_exp.weight = 0.25
     cfg.rewards.track_lin_vel_xy_exp.params = {

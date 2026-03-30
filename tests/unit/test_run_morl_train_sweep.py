@@ -6,10 +6,11 @@
 from __future__ import annotations
 
 import importlib.util
+import shutil
 import sys
 import time
+import uuid
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -28,6 +29,17 @@ def _load_module():
     sys.modules[module_name] = module
     spec.loader.exec_module(module)
     return module
+
+
+@pytest.fixture
+def local_tmp_path():
+    base = ROOT / ".tmp_test_run_morl_train_sweep"
+    path = base / uuid.uuid4().hex
+    path.mkdir(parents=True, exist_ok=False)
+    try:
+        yield path
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
 
 
 def test_default_experiment_matrix_matches_phase_plan():
@@ -80,25 +92,23 @@ def test_build_train_cmd_includes_morl_specific_flags():
     assert f"--run_name {run_name}" in joined
 
 
-def test_find_run_dir_returns_latest_match():
+def test_find_run_dir_returns_latest_match(local_tmp_path):
     module = _load_module()
-    with TemporaryDirectory(dir=ROOT) as tmp_dir:
-        tmp_path = Path(tmp_dir)
-        older = tmp_path / "2026-03-15_10-00-00_morl_p1_seed42"
-        newer = tmp_path / "2026-03-15_10-30-00_morl_p1_seed42"
-        older.mkdir()
-        newer.mkdir()
-        now = time.time()
-        older_mtime = now - 100
-        newer_mtime = now
-        import os
+    older = local_tmp_path / "2026-03-15_10-00-00_morl_p1_seed42"
+    newer = local_tmp_path / "2026-03-15_10-30-00_morl_p1_seed42"
+    older.mkdir()
+    newer.mkdir()
+    now = time.time()
+    older_mtime = now - 100
+    newer_mtime = now
+    import os
 
-        os.utime(older, (older_mtime, older_mtime))
-        os.utime(newer, (newer_mtime, newer_mtime))
+    os.utime(older, (older_mtime, older_mtime))
+    os.utime(newer, (newer_mtime, newer_mtime))
 
-        found = module._find_run_dir(tmp_path, "morl_p1_seed42")
+    found = module._find_run_dir(local_tmp_path, "morl_p1_seed42")
 
-        assert found == newer
+    assert found == newer
 
 
 class _StubLog:
@@ -115,71 +125,141 @@ class _StubLog:
         self.messages.append(("error", msg))
 
 
-def test_verify_run_artifacts_checks_checkpoint_and_configs():
+def test_verify_run_artifacts_checks_checkpoint_and_configs(local_tmp_path):
     module = _load_module()
     exp = module.MORL_EXPERIMENTS[0]
-    with TemporaryDirectory(dir=ROOT) as tmp_dir:
-        run_dir = Path(tmp_dir) / "2026-03-15_13-00-00_morl_p1_seed42"
-        params_dir = run_dir / "params"
-        params_dir.mkdir(parents=True)
+    run_dir = local_tmp_path / "2026-03-15_13-00-00_morl_p1_seed42"
+    params_dir = run_dir / "params"
+    params_dir.mkdir(parents=True)
 
-        (run_dir / "model_1499.pt").write_text("checkpoint", encoding="utf-8")
-        (params_dir / "agent.yaml").write_text(
-            "algorithm:\n  clip_param: 0.3\n",
-            encoding="utf-8",
-        )
-        (params_dir / "env.yaml").write_text(
-            "\n".join(
-                [
-                    "rewards:",
-                    "  track_lin_vel_xy_exp:",
-                    "    weight: 0.7",
-                    "  morl_energy:",
-                    "    weight: 0.1",
-                    "  morl_smooth:",
-                    "    weight: 0.1",
-                    "  morl_stable:",
-                    "    weight: 0.1",
-                ]
-            ),
-            encoding="utf-8",
-        )
+    (run_dir / "model_1499.pt").write_text("checkpoint", encoding="utf-8")
+    (params_dir / "agent.yaml").write_text(
+        "algorithm:\n  clip_param: 0.3\n",
+        encoding="utf-8",
+    )
+    (params_dir / "env.yaml").write_text(
+        "\n".join(
+            [
+                "rewards:",
+                "  track_lin_vel_xy_exp:",
+                "    weight: 0.7",
+                "  morl_energy:",
+                "    weight: 0.1",
+                "  morl_smooth:",
+                "    weight: 0.1",
+                "  morl_stable:",
+                "    weight: 0.1",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
-        assert module._verify_run_artifacts(
-            run_dir, exp, max_iterations=1500, log=_StubLog()
-        )
+    assert module._verify_run_artifacts(
+        run_dir, exp, max_iterations=1500, log=_StubLog()
+    )
 
 
-def test_verify_run_artifacts_rejects_weight_mismatch():
+def test_verify_run_artifacts_rejects_weight_mismatch(local_tmp_path):
     module = _load_module()
     exp = module.MORL_EXPERIMENTS[0]
-    with TemporaryDirectory(dir=ROOT) as tmp_dir:
-        run_dir = Path(tmp_dir) / "2026-03-15_13-00-00_morl_p1_seed42"
-        params_dir = run_dir / "params"
-        params_dir.mkdir(parents=True)
+    run_dir = local_tmp_path / "2026-03-15_13-00-00_morl_p1_seed42"
+    params_dir = run_dir / "params"
+    params_dir.mkdir(parents=True)
 
-        (run_dir / "model_1499.pt").write_text("checkpoint", encoding="utf-8")
-        (params_dir / "agent.yaml").write_text(
-            "algorithm:\n  clip_param: 0.3\n",
-            encoding="utf-8",
-        )
-        (params_dir / "env.yaml").write_text(
-            "\n".join(
-                [
-                    "rewards:",
-                    "  track_lin_vel_xy_exp:",
-                    "    weight: 0.25",
-                    "  morl_energy:",
-                    "    weight: 0.25",
-                    "  morl_smooth:",
-                    "    weight: 0.25",
-                    "  morl_stable:",
-                    "    weight: 0.25",
-                ]
-            ),
-            encoding="utf-8",
-        )
+    (run_dir / "model_1499.pt").write_text("checkpoint", encoding="utf-8")
+    (params_dir / "agent.yaml").write_text(
+        "algorithm:\n  clip_param: 0.3\n",
+        encoding="utf-8",
+    )
+    (params_dir / "env.yaml").write_text(
+        "\n".join(
+            [
+                "rewards:",
+                "  track_lin_vel_xy_exp:",
+                "    weight: 0.25",
+                "  morl_energy:",
+                "    weight: 0.25",
+                "  morl_smooth:",
+                "    weight: 0.25",
+                "  morl_stable:",
+                "    weight: 0.25",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
-        assert not module._verify_run_artifacts(
-            run_dir, exp, max_iterations=1500, log=_StubLog()
-        )
+    assert not module._verify_run_artifacts(
+        run_dir, exp, max_iterations=1500, log=_StubLog()
+    )
+
+
+def test_resolve_expected_checkpoint_uses_policy_init_final_checkpoint(local_tmp_path):
+    module = _load_module()
+    run_dir = local_tmp_path / "2026-03-28_15-00-59_pilot_b_p10_cmdfix_warm_seed42"
+    run_dir.mkdir()
+    expected_checkpoint = run_dir / "model_599.pt"
+    expected_checkpoint.write_text("checkpoint", encoding="utf-8")
+
+    exp = {
+        "name": "pilot_b_p10_cmdfix_warm",
+        "policy_id": "P10",
+        "morl_weights": "0.2,0.2,0.2,0.4",
+        "init_checkpoint": str(
+            ROOT
+            / "logs"
+            / "rsl_rl"
+            / "unitree_go1_rough"
+            / "2026-03-08_16-46-27_baseline_rough_ros2cmd"
+            / "model_1499.pt"
+        ),
+    }
+
+    resolved = module._resolve_expected_checkpoint(run_dir, exp, max_iterations=600)
+
+    assert resolved == expected_checkpoint
+
+
+def test_verify_run_artifacts_accepts_policy_init_final_checkpoint(local_tmp_path):
+    module = _load_module()
+    exp = {
+        "name": "pilot_b_p10_cmdfix_warm",
+        "policy_id": "P10",
+        "morl_weights": "0.2,0.2,0.2,0.4",
+        "init_checkpoint": str(
+            ROOT
+            / "logs"
+            / "rsl_rl"
+            / "unitree_go1_rough"
+            / "2026-03-08_16-46-27_baseline_rough_ros2cmd"
+            / "model_1499.pt"
+        ),
+    }
+    run_dir = local_tmp_path / "2026-03-28_15-00-59_pilot_b_p10_cmdfix_warm_seed42"
+    params_dir = run_dir / "params"
+    params_dir.mkdir(parents=True)
+
+    (run_dir / "model_599.pt").write_text("checkpoint", encoding="utf-8")
+    (params_dir / "agent.yaml").write_text(
+        "algorithm:\n  clip_param: 0.3\n",
+        encoding="utf-8",
+    )
+    (params_dir / "env.yaml").write_text(
+        "\n".join(
+            [
+                "rewards:",
+                "  track_lin_vel_xy_exp:",
+                "    weight: 0.2",
+                "  morl_energy:",
+                "    weight: 0.2",
+                "  morl_smooth:",
+                "    weight: 0.2",
+                "  morl_stable:",
+                "    weight: 0.4",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    assert module._verify_run_artifacts(
+        run_dir, exp, max_iterations=600, log=_StubLog()
+    )

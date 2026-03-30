@@ -315,24 +315,41 @@ def _build_train_cmd(
 ) -> list[str]:
     train_script = project_root / "scripts" / "go1-ros2-test" / "train.py"
     return [
-        sys.executable,
-        str(train_script),
-        "--task",
-        exp.get("task", MORL_TASK),
-        "--num_envs",
-        str(num_envs),
-        "--max_iterations",
-        str(max_iterations),
-        "--seed",
-        str(seed),
-        "--headless",
-        "--disable_ros2_tracking_tune",
-        "--clip_param",
-        str(clip_param),
-        "--morl_weights",
-        exp["morl_weights"],
-        "--run_name",
-        run_name,
+        *[
+            sys.executable,
+            str(train_script),
+            "--task",
+            exp.get("task", MORL_TASK),
+            "--num_envs",
+            str(num_envs),
+            "--max_iterations",
+            str(max_iterations),
+            "--seed",
+            str(seed),
+            "--headless",
+            "--disable_ros2_tracking_tune",
+            "--clip_param",
+            str(clip_param),
+            "--morl_weights",
+            exp["morl_weights"],
+            "--run_name",
+            run_name,
+        ],
+        *(
+            ["--morl_command_profile", exp["command_profile"]]
+            if exp.get("command_profile")
+            else []
+        ),
+        *(
+            ["--init_checkpoint", exp["init_checkpoint"]]
+            if exp.get("init_checkpoint")
+            else []
+        ),
+        *(
+            ["--load_run", exp["load_run"]]
+            if exp.get("load_run")
+            else []
+        ),
     ]
 
 
@@ -347,10 +364,43 @@ def _find_run_dir(logs_dir: Path, run_name: str) -> Optional[Path]:
     return dirs[0] if dirs else None
 
 
+def _extract_checkpoint_index(checkpoint_name: str) -> Optional[int]:
+    match = re.fullmatch(r"model_(\d+)\.pt", checkpoint_name)
+    if match is None:
+        return None
+    return int(match.group(1))
+
+
+def _find_latest_checkpoint(run_dir: Path) -> Optional[Path]:
+    candidates: list[tuple[int, Path]] = []
+    for path in run_dir.glob("model_*.pt"):
+        index = _extract_checkpoint_index(path.name)
+        if index is not None:
+            candidates.append((index, path))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    return candidates[0][1]
+
+
+def _resolve_expected_checkpoint(run_dir: Path, exp: dict, max_iterations: int) -> Path:
+    init_checkpoint = exp.get("init_checkpoint")
+    if init_checkpoint and exp.get("resume_like_init", False):
+        init_name = Path(str(init_checkpoint)).name
+        init_index = _extract_checkpoint_index(init_name)
+        if init_index is not None:
+            return run_dir / f"model_{init_index + max_iterations - 1}.pt"
+    return run_dir / f"model_{max_iterations - 1}.pt"
+
+
 def _verify_run_artifacts(run_dir: Path, exp: dict, max_iterations: int, log: DualLogger) -> bool:
-    expected_checkpoint = run_dir / f"model_{max_iterations - 1}.pt"
+    expected_checkpoint = _resolve_expected_checkpoint(run_dir, exp, max_iterations)
     if not expected_checkpoint.exists():
-        log.warn(f"  checkpoint 不存在: {expected_checkpoint.name}")
+        latest_checkpoint = _find_latest_checkpoint(run_dir)
+        latest_name = latest_checkpoint.name if latest_checkpoint is not None else "none"
+        log.warn(
+            f"  checkpoint 不存在: {expected_checkpoint.name} (latest found: {latest_name})"
+        )
         return False
 
     params_dir = run_dir / "params"
@@ -424,10 +474,11 @@ def run_single_training(
     num_envs: int = NUM_ENVS,
     max_iterations: int = MAX_ITERATIONS,
     clip_param: float = DEFAULT_CLIP_PARAM,
+    sweep_log_subdir: str = "phase_morl_train",
 ) -> RunResult:
     run_name = f"{exp['name']}_seed{seed}"
     logs_dir = project_root / "logs" / "rsl_rl" / "unitree_go1_rough"
-    sweep_log_dir = project_root / "logs" / "sweep" / "phase_morl_train"
+    sweep_log_dir = project_root / "logs" / "sweep" / sweep_log_subdir
     sweep_log_dir.mkdir(parents=True, exist_ok=True)
 
     cmd = _build_train_cmd(
@@ -532,7 +583,7 @@ def run_single_training(
 
                 verified = _verify_run_artifacts(run_dir, exp, max_iterations, log)
                 diverged = _check_divergence(run_dir, log)
-                checkpoint = run_dir / f"model_{max_iterations - 1}.pt"
+                checkpoint = _resolve_expected_checkpoint(run_dir, exp, max_iterations)
 
                 if verified:
                     log.info(f"  [PASS] {run_name} ({duration / 3600:.2f}h)")
@@ -616,7 +667,11 @@ def run_single_training(
     )
 
 
-def print_summary(results: list[RunResult], log: DualLogger):
+def print_summary(
+    results: list[RunResult],
+    log: DualLogger,
+    summary_filename: str = "phase_morl_train_sweep_summary.json",
+):
     log.info(f"\n{'=' * 70}")
     log.info("SWEEP SUMMARY")
     log.info(f"{'=' * 70}")
@@ -654,7 +709,7 @@ def print_summary(results: list[RunResult], log: DualLogger):
         "total_hours": round(total_hours, 2),
         "results": [asdict(result) for result in results],
     }
-    json_path = log.log_path.parent / "phase_morl_train_sweep_summary.json"
+    json_path = log.log_path.parent / summary_filename
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
     log.info(f"JSON summary: {json_path}")

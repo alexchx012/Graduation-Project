@@ -76,3 +76,33 @@ def resolve_eval_checkpoint_path(
         return get_checkpoint_path_func(log_root_path, load_run, load_checkpoint)
 
     raise ValueError("get_checkpoint_path_func is required when checkpoint_arg is not provided")
+
+
+def resolve_training_checkpoint_path(
+    log_root_path: str,
+    load_run: Optional[str],
+    checkpoint_arg: str,
+    retrieve_file_path_func: Optional[Callable[[str], str]] = None,
+) -> str:
+    """Resolve a checkpoint path for policy initialization during training.
+
+    Unlike resume, this helper always requires an explicit checkpoint target.
+    It supports:
+    - direct absolute or relative-existing checkpoint paths
+    - relative checkpoint names resolved against ``load_run``
+    - optional custom file retriever fallback
+    """
+
+    direct_path = _resolve_existing_path(checkpoint_arg)
+    if direct_path is not None:
+        return direct_path
+
+    for run_dir in _candidate_run_dirs(log_root_path, load_run):
+        candidate = _resolve_existing_path(os.path.join(run_dir, checkpoint_arg))
+        if candidate is not None:
+            return candidate
+
+    if retrieve_file_path_func is not None:
+        return retrieve_file_path_func(checkpoint_arg)
+
+    raise FileNotFoundError(f"Unable to resolve training checkpoint path: {checkpoint_arg}")
