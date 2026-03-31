@@ -24,6 +24,7 @@ import cli_args  # isort: skip
 from morl_reward_logging import attach_reward_contribution_logging  # isort: skip
 from morl_cli import (  # isort: skip
     MORL_COMMAND_PROFILE_NAMES,
+    MORL_ROS2_TASK_IDS as _MORL_ROS2_TASK_IDS,
     MORL_TASK_IDS as _MORL_TASK_IDS,
     apply_morl_command_profile,
     apply_morl_weight_override,
@@ -109,6 +110,18 @@ parser.add_argument(
     help="Initialize policy weights from a checkpoint path without enabling resume mode.",
 )
 parser.add_argument(
+    "--morl_curriculum_warmup",
+    type=int,
+    default=0,
+    help="MORL curriculum: number of warmup iterations with MORL rewards zeroed (scaffold only).",
+)
+parser.add_argument(
+    "--morl_curriculum_ramp",
+    type=int,
+    default=0,
+    help="MORL curriculum: number of iterations to linearly ramp MORL rewards from 0 to full weight.",
+)
+parser.add_argument(
     "--log_morl_reward_contributions",
     action="store_true",
     default=False,
@@ -162,7 +175,7 @@ _ROS2_TASK_IDS = {
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRMass-Play-v0",
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-v0",
     "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-DRPush-Play-v0",
-} | set(_MORL_TASK_IDS)
+} | set(_MORL_ROS2_TASK_IDS)
 
 
 def _apply_ros2_tracking_tune(agent_cfg: "RslRlBaseRunnerCfg") -> None:
@@ -346,6 +359,20 @@ def main(
             raise ValueError("--morl_command_profile can only be used with MORL task ids.")
         apply_morl_command_profile(env_cfg, args_cli.morl_command_profile)
         print(f"[MORL Command Profile] {args_cli.morl_command_profile}")
+
+    # MORL curriculum: convert iteration counts to env-step counts
+    if args_cli.morl_curriculum_warmup > 0 or args_cli.morl_curriculum_ramp > 0:
+        if args_cli.task not in _MORL_TASK_IDS:
+            raise ValueError("--morl_curriculum_* can only be used with MORL task ids.")
+        steps_per_iter = agent_cfg.num_steps_per_env
+        env_cfg.morl_curriculum_warmup_steps = args_cli.morl_curriculum_warmup * steps_per_iter
+        env_cfg.morl_curriculum_ramp_steps = args_cli.morl_curriculum_ramp * steps_per_iter
+        print(
+            f"[MORL Curriculum] warmup={args_cli.morl_curriculum_warmup} iters "
+            f"({env_cfg.morl_curriculum_warmup_steps} steps), "
+            f"ramp={args_cli.morl_curriculum_ramp} iters "
+            f"({env_cfg.morl_curriculum_ramp_steps} steps)"
+        )
 
     if args_cli.init_checkpoint is not None and args_cli.resume:
         raise ValueError("--init_checkpoint cannot be combined with --resume.")

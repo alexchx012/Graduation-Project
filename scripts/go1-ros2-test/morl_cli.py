@@ -26,14 +26,21 @@ MORL_PRIMARY_REWARD_NAMES_V2 = (
     "morl_stable",
 )
 
-MORL_TASK_IDS = frozenset(
+MORL_ROS2_TASK_IDS = frozenset(
     {
         "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-v0",
         "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-Play-v0",
+    }
+)
+
+MORL_INTERNAL_CMD_TASK_IDS = frozenset(
+    {
         "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-v2",
         "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-Play-v2",
     }
 )
+
+MORL_TASK_IDS = MORL_ROS2_TASK_IDS | MORL_INTERNAL_CMD_TASK_IDS
 
 MORL_COMMAND_PROFILES = {
     "repair_forward_v1": {
@@ -43,7 +50,15 @@ MORL_COMMAND_PROFILES = {
         "heading_command": False,
         "rel_heading_envs": 0.0,
         "rel_standing_envs": 0.0,
-    }
+    },
+    "repair_forward_v2": {
+        "lin_vel_x": (0.5, 1.5),
+        "lin_vel_y": (0.0, 0.0),
+        "ang_vel_z": (-0.5, 0.5),
+        "heading_command": False,
+        "rel_heading_envs": 0.0,
+        "rel_standing_envs": 0.0,
+    },
 }
 
 MORL_COMMAND_PROFILE_NAMES = frozenset(MORL_COMMAND_PROFILES)

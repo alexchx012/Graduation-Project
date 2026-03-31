@@ -31,9 +31,12 @@ from run_morl_train_sweep import (  # noqa: E402
 )
 
 
-DEFAULT_MAX_ITERATIONS = 600
-DEFAULT_PILOT_IDS = ("A", "B", "C")
-DEFAULT_COMMAND_PROFILE = "repair_forward_v1"
+DEFAULT_MAX_ITERATIONS = 900
+DEFAULT_PILOT_IDS = ("D", "E")
+DEFAULT_COMMAND_PROFILE = "repair_forward_v2"
+# MORL curriculum defaults (iters): warmup on pure scaffold, then linear ramp
+DEFAULT_CURRICULUM_WARMUP = 300
+DEFAULT_CURRICULUM_RAMP = 300
 BASELINE_INIT_CHECKPOINT = (
     Path("logs")
     / "rsl_rl"
@@ -43,12 +46,13 @@ BASELINE_INIT_CHECKPOINT = (
 )
 
 PILOT_SPECS = {
+    # --- Legacy pilots (kept for reference / resume) ---
     "A": {
         "pilot_id": "A",
         "name": "pilot_a_p1_cmdfix",
         "policy_id": "P1",
         "morl_weights": "0.7,0.1,0.1,0.1",
-        "command_profile": DEFAULT_COMMAND_PROFILE,
+        "command_profile": "repair_forward_v1",
         "use_warm_start": False,
     },
     "B": {
@@ -56,7 +60,7 @@ PILOT_SPECS = {
         "name": "pilot_b_p10_cmdfix_warm",
         "policy_id": "P10",
         "morl_weights": "0.2,0.2,0.2,0.4",
-        "command_profile": DEFAULT_COMMAND_PROFILE,
+        "command_profile": "repair_forward_v1",
         "use_warm_start": True,
     },
     "C": {
@@ -64,8 +68,31 @@ PILOT_SPECS = {
         "name": "pilot_c_p2_cmdfix_warm",
         "policy_id": "P2",
         "morl_weights": "0.1,0.7,0.1,0.1",
+        "command_profile": "repair_forward_v1",
+        "use_warm_start": True,
+    },
+    # --- New repair pilots with curriculum + cmd-v2 + clip=0.2 ---
+    "D": {
+        "pilot_id": "D",
+        "name": "pilot_d_p10_curriculum_warm",
+        "policy_id": "P10",
+        "task": "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-v2",
+        "morl_weights": "0.2,0.2,0.2,0.4",
         "command_profile": DEFAULT_COMMAND_PROFILE,
         "use_warm_start": True,
+        "morl_curriculum_warmup": DEFAULT_CURRICULUM_WARMUP,
+        "morl_curriculum_ramp": DEFAULT_CURRICULUM_RAMP,
+    },
+    "E": {
+        "pilot_id": "E",
+        "name": "pilot_e_p1_curriculum_warm",
+        "policy_id": "P1",
+        "task": "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-v2",
+        "morl_weights": "0.7,0.1,0.1,0.1",
+        "command_profile": DEFAULT_COMMAND_PROFILE,
+        "use_warm_start": True,
+        "morl_curriculum_warmup": DEFAULT_CURRICULUM_WARMUP,
+        "morl_curriculum_ramp": DEFAULT_CURRICULUM_RAMP,
     },
 }
 
@@ -93,9 +120,15 @@ def _build_repair_experiment(pilot_id: str, project_root: Path | None = None) ->
         "morl_weights": spec["morl_weights"],
         "command_profile": spec["command_profile"],
     }
+    if spec.get("task"):
+        exp["task"] = spec["task"]
     if spec["use_warm_start"]:
         root = project_root or Path(__file__).resolve().parents[2]
         exp["init_checkpoint"] = str((root / BASELINE_INIT_CHECKPOINT).resolve())
+    if spec.get("morl_curriculum_warmup"):
+        exp["morl_curriculum_warmup"] = spec["morl_curriculum_warmup"]
+    if spec.get("morl_curriculum_ramp"):
+        exp["morl_curriculum_ramp"] = spec["morl_curriculum_ramp"]
     return exp
 
 

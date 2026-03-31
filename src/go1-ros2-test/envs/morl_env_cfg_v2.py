@@ -19,6 +19,11 @@ def _configure_morl_v2_rewards(cfg) -> None:
     """Apply a fixed locomotion scaffold plus secondary MORL preference terms."""
 
     cfg.morl_secondary_scale = 0.25
+
+    # MORL curriculum (disabled by default; set via CLI --morl_curriculum_*)
+    cfg.morl_curriculum_warmup_steps = 0
+    cfg.morl_curriculum_ramp_steps = 0
+
     cfg.morl_diagnostic_terms = (
         "track_lin_vel_xy_exp",
         "track_ang_vel_z_exp",

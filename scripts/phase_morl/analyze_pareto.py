@@ -16,10 +16,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SUMMARY_DIR = PROJECT_ROOT / "logs" / "eval" / "phase_morl"
+DEFAULT_SUMMARY_DIR = PROJECT_ROOT / "logs" / "eval" / "phase_morl_v2"
 DEFAULT_RUN_ROOT = PROJECT_ROOT / "logs" / "rsl_rl" / "unitree_go1_rough"
 DEFAULT_OUTPUT_JSON = DEFAULT_SUMMARY_DIR / "pareto_analysis.json"
 DEFAULT_FIGURE_DIR = PROJECT_ROOT / "docs" / "figures"
+DEFAULT_SCENARIO = None  # None = legacy (no scenario suffix); set to e.g. "S1" for scenario-aware
 
 OBJECTIVE_KEYS = ("J_speed", "J_energy", "J_smooth", "J_stable")
 SUPPLEMENTAL_KEYS = ("success_rate", "mean_base_contact_rate", "mean_timeout_rate", "recovery_time")
@@ -55,8 +56,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Analyze MORL eval results and produce Pareto/HV artifacts.")
     parser.add_argument("--summary_dir", type=Path, default=DEFAULT_SUMMARY_DIR, help="Directory containing eval JSONs.")
     parser.add_argument("--run_root", type=Path, default=DEFAULT_RUN_ROOT, help="Directory containing active run folders.")
-    parser.add_argument("--output_json", type=Path, default=DEFAULT_OUTPUT_JSON, help="Output JSON artifact path.")
+    parser.add_argument("--output_json", type=Path, default=None, help="Output JSON artifact path (auto-named if --scenario set).")
     parser.add_argument("--figure_dir", type=Path, default=DEFAULT_FIGURE_DIR, help="Directory for generated figures.")
+    parser.add_argument("--scenario", type=str, default=DEFAULT_SCENARIO, help="Scenario id (e.g. S1). Looks for {run}_{scenario}.json naming.")
     return parser
 
 
@@ -93,14 +95,22 @@ def discover_active_run_names(run_root: Path) -> list[str]:
     )
 
 
-def load_run_rows(summary_dir: Path, run_root: Path) -> list[dict]:
+def load_run_rows(summary_dir: Path, run_root: Path, scenario: str | None = None) -> list[dict]:
     if not summary_dir.exists():
         raise FileNotFoundError(f"Summary directory not found: {summary_dir}")
 
     run_rows: list[dict] = []
     for run_name in discover_active_run_names(run_root):
-        summary_path = summary_dir / f"{run_name}.json"
+        # Scenario-aware naming: morl_p1_seed42_S1.json vs morl_p1_seed42.json
+        if scenario:
+            summary_path = summary_dir / f"{run_name}_{scenario}.json"
+        else:
+            summary_path = summary_dir / f"{run_name}.json"
+
         if not summary_path.exists():
+            if scenario:
+                # When filtering by scenario, skip runs without that scenario eval
+                continue
             raise FileNotFoundError(f"Missing eval summary for active run: {summary_path}")
 
         data = json.loads(summary_path.read_text(encoding="utf-8"))
@@ -112,6 +122,7 @@ def load_run_rows(summary_dir: Path, run_root: Path) -> list[dict]:
             "policy_id": data.get("policy_id"),
             "summary_path": str(summary_path),
             "weights": POLICY_WEIGHT_MAP.get(policy_name),
+            "scenario": scenario or data.get("scenario_id"),
         }
         for key in OBJECTIVE_KEYS + SUPPLEMENTAL_KEYS + ("elapsed_seconds",):
             row[key] = data.get(key)
@@ -309,18 +320,38 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    run_rows = load_run_rows(summary_dir=args.summary_dir, run_root=args.run_root)
+    scenario = args.scenario.strip().upper() if args.scenario else None
+    scenario_suffix = f"_{scenario}" if scenario else ""
+
+    # Auto-resolve output paths with scenario suffix
+    if args.output_json is None:
+        args.output_json = args.summary_dir / f"pareto_analysis{scenario_suffix}.json"
+
+    run_rows = load_run_rows(summary_dir=args.summary_dir, run_root=args.run_root, scenario=scenario)
+    if not run_rows:
+        print(f"[PARETO] No eval data found (summary_dir={args.summary_dir}, scenario={scenario})")
+        return
+
     payload = build_analysis_payload(run_rows)
+    if scenario:
+        payload["scenario"] = scenario
 
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
     args.output_json.write_text(json.dumps(payload, ensure_ascii=True, indent=2), encoding="utf-8")
 
     policy_rows = [dict(row) for row in payload["policy_level"]["rows"]]
     pareto_policy_names = set(payload["pareto_front"]["policy_names"])
-    save_pairwise_figure(policy_rows, pareto_policy_names, args.figure_dir / "pareto_front_pairwise.png")
-    save_policy_summary_figure(policy_rows, pareto_policy_names, args.figure_dir / "pareto_front_policy_summary.png")
+    save_pairwise_figure(
+        policy_rows, pareto_policy_names,
+        args.figure_dir / f"pareto_front_pairwise{scenario_suffix}.png",
+    )
+    save_policy_summary_figure(
+        policy_rows, pareto_policy_names,
+        args.figure_dir / f"pareto_front_policy_summary{scenario_suffix}.png",
+    )
 
     print(f"[PARETO] JSON written to: {args.output_json}")
+    print(f"[PARETO] Scenario: {scenario or 'legacy (no filter)'}")
     print(f"[PARETO] Policy count: {payload['generated_from_policies']}")
     print(f"[PARETO] Pareto policies: {', '.join(payload['pareto_front']['policy_names'])}")
     print(f"[PARETO] Hypervolume: {payload['hypervolume']:.6f}")

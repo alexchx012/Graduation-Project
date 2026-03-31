@@ -53,7 +53,7 @@ SEEDS = [42]
 MORL_TASK = "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-v0"
 NUM_ENVS = 4096
 MAX_ITERATIONS = 1500
-DEFAULT_CLIP_PARAM = 0.3
+DEFAULT_CLIP_PARAM = 0.2
 MAX_RETRY = 3
 WATCHDOG_INTERVAL_S = 300
 DIVERGENCE_THRESHOLD = 0.3
@@ -65,6 +65,17 @@ PRIMARY_REWARD_NAMES = (
     "morl_smooth",
     "morl_stable",
 )
+
+PRIMARY_REWARD_NAMES_V2 = (
+    "morl_speed",
+    "morl_energy",
+    "morl_smooth",
+    "morl_stable",
+)
+
+# v2 secondary scale: morl_secondary_scale (0.25) * per-objective base (0.25) = 0.0625
+# CLI weights (sum=1) are multiplied by this scale in apply_morl_weight_override.
+_V2_SECONDARY_WEIGHT_SCALE = 0.25
 
 MORL_EXPERIMENTS = [
     {"name": "morl_p1", "policy_id": "P1", "morl_weights": "0.7,0.1,0.1,0.1", "note": "速度优先"},
@@ -350,6 +361,16 @@ def _build_train_cmd(
             if exp.get("load_run")
             else []
         ),
+        *(
+            ["--morl_curriculum_warmup", str(exp["morl_curriculum_warmup"])]
+            if exp.get("morl_curriculum_warmup")
+            else []
+        ),
+        *(
+            ["--morl_curriculum_ramp", str(exp["morl_curriculum_ramp"])]
+            if exp.get("morl_curriculum_ramp")
+            else []
+        ),
     ]
 
 
@@ -424,9 +445,13 @@ def _verify_run_artifacts(run_dir: Path, exp: dict, max_iterations: int, log: Du
     else:
         weights = [float(weight) for weight in exp["morl_weights"].split(",")]
         content = env_yaml.read_text(encoding="utf-8", errors="replace")
-        for reward_name, weight in zip(PRIMARY_REWARD_NAMES, weights, strict=True):
-            if not _yaml_text_has_weight(content, reward_name, weight):
-                log.warn(f"  env.yaml {reward_name} 权重不匹配，预期 {weight}")
+        is_v2 = "v2" in exp.get("task", "")
+        reward_names = PRIMARY_REWARD_NAMES_V2 if is_v2 else PRIMARY_REWARD_NAMES
+        weight_scale = _V2_SECONDARY_WEIGHT_SCALE if is_v2 else 1.0
+        for reward_name, weight in zip(reward_names, weights, strict=True):
+            expected = weight * weight_scale
+            if not _yaml_text_has_weight(content, reward_name, expected):
+                log.warn(f"  env.yaml {reward_name} 权重不匹配，预期 {expected}")
                 ok = False
 
     if ok:
