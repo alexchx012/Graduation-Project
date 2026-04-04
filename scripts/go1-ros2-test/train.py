@@ -110,6 +110,13 @@ parser.add_argument(
     help="Initialize policy weights from a checkpoint path without enabling resume mode.",
 )
 parser.add_argument(
+    "--init_with_optimizer",
+    action="store_true",
+    default=False,
+    help="When used with --init_checkpoint, also load Adam optimizer state "
+    "(prevents oversized first PPO update). Iteration counter is still reset to 0.",
+)
+parser.add_argument(
     "--morl_curriculum_warmup",
     type=int,
     default=0,
@@ -614,10 +621,15 @@ def main(
         # load previously trained model
         runner.load(resume_path)
     elif init_checkpoint_path is not None:
-        print(f"[INFO]: Loading initial policy checkpoint from: {init_checkpoint_path}")
-        runner.load(init_checkpoint_path, load_optimizer=False)
+        load_opt = getattr(args_cli, "init_with_optimizer", False)
+        print(f"[INFO]: Loading initial checkpoint from: {init_checkpoint_path}")
+        print(f"[INFO] load_optimizer={load_opt}")
+        runner.load(init_checkpoint_path, load_optimizer=load_opt)
         runner.current_learning_iteration = 0
-        print("[INFO] Policy-only init enabled: optimizer state ignored, iteration reset to 0")
+        if load_opt:
+            print("[INFO] Init with optimizer: policy + Adam state loaded, iteration reset to 0")
+        else:
+            print("[INFO] Policy-only init: optimizer state ignored, iteration reset to 0")
 
     # dump the configuration into log-directory
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)

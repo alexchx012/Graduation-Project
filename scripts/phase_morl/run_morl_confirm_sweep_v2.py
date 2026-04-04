@@ -84,6 +84,7 @@ def _build_v2_experiment(base_exp: dict, project_root: Path) -> dict:
     exp["command_profile"] = DEFAULT_COMMAND_PROFILE
     exp["morl_curriculum_warmup"] = DEFAULT_CURRICULUM_WARMUP
     exp["morl_curriculum_ramp"] = DEFAULT_CURRICULUM_RAMP
+    exp["init_with_optimizer"] = True
     checkpoint_path = (project_root / BASELINE_INIT_CHECKPOINT).resolve()
     if checkpoint_path.exists():
         exp["init_checkpoint"] = str(checkpoint_path)

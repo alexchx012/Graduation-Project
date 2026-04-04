@@ -51,7 +51,17 @@
       "Bash(mv logs/eval/phase_morl/_smoke_*.json logs/eval/phase_morl/_archive_20260331_v1_evals/)",
       "Bash(mv logs/eval/phase_morl/_tmp_*.json logs/eval/phase_morl/_archive_20260331_v1_evals/)",
       "Bash(mv docs/figures/pareto_front_*.png docs/figures/_archive_20260331/)",
-      "Bash(xargs -I{} basename {})"
+      "Bash(xargs -I{} basename {})",
+      "Bash(python -c ':*)",
+      "Bash(python:*)",
+      "Bash(conda run:*)",
+      "Bash(C:/Users/SNight/anaconda3/envs/env_isaaclab/python.exe:*)",
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && python -c \"import json; d=json.load\\(open\\(\\\\\"{}\\\\\"\\)\\); print\\(f\\\\\"J_speed range: {d.get\\(\\\\\"J_speed\\\\\"\\)}, J_energy: {d.get\\(\\\\\"J_energy\\\\\"\\)}, J_smooth: {d.get\\(\\\\\"J_smooth\\\\\"\\)}, J_stable: {d.get\\(\\\\\"J_stable\\\\\"\\)}\\\\\"\\)\"')",
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(grep \"run_full_eval_matrix.py\\\\|run_morl_ablation.py\" \"D:\\\\Graduation-Project\\\\scripts\\\\phase_morl\"/*.py)",
+      "Bash(wc -l \"D:\\\\Graduation-Project\\\\logs\\\\eval\\\\phase_morl_v2\\\\morl_p\"*\"_S1.json\")",
+      "Bash(xargs head:*)",
+      "Bash(grep:*)"
     ]
   },
   "outputStyle": "Explanatory"

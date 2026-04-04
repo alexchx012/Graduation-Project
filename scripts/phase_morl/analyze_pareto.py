@@ -101,11 +101,19 @@ def load_run_rows(summary_dir: Path, run_root: Path, scenario: str | None = None
 
     run_rows: list[dict] = []
     for run_name in discover_active_run_names(run_root):
-        # Scenario-aware naming: morl_p1_seed42_S1.json vs morl_p1_seed42.json
+        policy_name, seed = _extract_policy_and_seed(run_name)
+        # Eval JSON uses simplified name (morl_p1_seed42) not full dir name (2026-..._morl_p1_seed42)
+        short_name = f"morl_{policy_name.lower()}_seed{seed}"
+
         if scenario:
-            summary_path = summary_dir / f"{run_name}_{scenario}.json"
+            # Try short name first (from run_full_eval_matrix), then full name
+            summary_path = summary_dir / f"{short_name}_{scenario}.json"
+            if not summary_path.exists():
+                summary_path = summary_dir / f"{run_name}_{scenario}.json"
         else:
-            summary_path = summary_dir / f"{run_name}.json"
+            summary_path = summary_dir / f"{short_name}.json"
+            if not summary_path.exists():
+                summary_path = summary_dir / f"{run_name}.json"
 
         if not summary_path.exists():
             if scenario:
@@ -114,7 +122,6 @@ def load_run_rows(summary_dir: Path, run_root: Path, scenario: str | None = None
             raise FileNotFoundError(f"Missing eval summary for active run: {summary_path}")
 
         data = json.loads(summary_path.read_text(encoding="utf-8"))
-        policy_name, seed = _extract_policy_and_seed(run_name)
         row = {
             "run": run_name,
             "policy": policy_name,

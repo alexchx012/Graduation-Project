@@ -371,6 +371,11 @@ def _build_train_cmd(
             if exp.get("morl_curriculum_ramp")
             else []
         ),
+        *(
+            ["--init_with_optimizer"]
+            if exp.get("init_with_optimizer")
+            else []
+        ),
     ]
 
 

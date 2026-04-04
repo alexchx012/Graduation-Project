@@ -91,6 +91,7 @@ def _build_ablation_experiment(ablation_id: str, project_root: Path) -> dict:
     spec["command_profile"] = DEFAULT_COMMAND_PROFILE
     spec["morl_curriculum_warmup"] = DEFAULT_CURRICULUM_WARMUP
     spec["morl_curriculum_ramp"] = DEFAULT_CURRICULUM_RAMP
+    spec["init_with_optimizer"] = True
     checkpoint_path = (project_root / BASELINE_INIT_CHECKPOINT).resolve()
     if checkpoint_path.exists():
         spec["init_checkpoint"] = str(checkpoint_path)
