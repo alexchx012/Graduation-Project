@@ -1,0 +1,15 @@
+{
+  "frozen_on": "2026-04-05",
+  "source_preflight_maxima": "logs/eval/phase_morl_v2_preflight/preflight_metric_maxima.json",
+  "verified_scenarios": ["S2", "S3", "S4", "S5", "S6"],
+  "normalization_bounds": {
+    "J_speed": [0.0, 1.2],
+    "J_energy": [0.0, 2500.0],
+    "J_smooth": [0.0, 2.6],
+    "J_stable": [0.0, 0.7]
+  },
+  "ref_point": [1.1, 1.1, 1.1, 1.1],
+  "official_policy_set": ["P1", "P2", "P3", "P4", "P10"],
+  "exploratory_policy_set": ["P5", "P6", "P7", "P8", "P9"],
+  "baseline_policy_set": ["baseline"]
+}

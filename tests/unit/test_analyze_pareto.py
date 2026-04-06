@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import importlib.util
 import math
+import shutil
 import sys
+import uuid
 from pathlib import Path
 
 import pytest
@@ -27,6 +29,17 @@ def _load_module():
     sys.modules[module_name] = module
     spec.loader.exec_module(module)
     return module
+
+
+@pytest.fixture
+def local_tmp_path():
+    base = ROOT / ".tmp_test_analyze_pareto_manifest"
+    path = base / uuid.uuid4().hex
+    path.mkdir(parents=True, exist_ok=False)
+    try:
+        yield path
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
 
 
 def test_normalize_objective_rows_uses_frozen_bounds_and_clips_values():
@@ -123,3 +136,160 @@ def test_build_analysis_payload_includes_policy_and_run_level_sections():
     assert payload["generated_from_policies"] == 2
     assert payload["pareto_front"]["policy_names"] == ["P5"]
     assert math.isfinite(payload["hypervolume"])
+
+
+def test_load_manifest_rows_uses_output_stem_and_canonical_policy_identity(local_tmp_path):
+    module = _load_module()
+
+    summary_dir = local_tmp_path / "eval"
+    summary_dir.mkdir()
+    manifest_path = local_tmp_path / "phase4_main_manifest.json"
+
+    (summary_dir / "morl_p1_seed42_S1.json").write_text(
+        '{"J_speed": 0.1, "J_energy": 80.0, "J_smooth": 1.3, "J_stable": 0.3}',
+        encoding="utf-8",
+    )
+    (summary_dir / "baseline_seed42_S1.json").write_text(
+        '{"J_speed": 0.2, "J_energy": 90.0, "J_smooth": 1.4, "J_stable": 0.4}',
+        encoding="utf-8",
+    )
+    manifest_path.write_text(
+        """
+{
+  "entries": [
+    {
+      "family": "morl",
+      "policy_id": "P1",
+      "canonical_seed": 42,
+      "run_dir": "D:/Graduation-Project/logs/rsl_rl/unitree_go1_rough/2026-03-31_16-11-33_morl_p1_seed42",
+      "checkpoint": "model_899.pt",
+      "task": "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-Play-v2",
+      "output_stem": "morl_p1_seed42",
+      "evidence_layer": "A",
+      "official_hv_eligible": true
+    },
+    {
+      "family": "baseline",
+      "policy_id": "baseline",
+      "canonical_seed": 42,
+      "run_dir": "D:/Graduation-Project/logs/rsl_rl/unitree_go1_rough/2026-03-08_16-46-27_baseline_rough_ros2cmd",
+      "checkpoint": "model_1499.pt",
+      "task": "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Play-v0",
+      "output_stem": "baseline_seed42",
+      "evidence_layer": "D",
+      "official_hv_eligible": false
+    }
+  ]
+}
+""".strip(),
+        encoding="utf-8",
+    )
+
+    rows = module.load_manifest_rows(summary_dir=summary_dir, manifest_path=manifest_path, scenario="S1")
+
+    assert [row["policy"] for row in rows] == ["P1", "baseline"]
+    assert rows[0]["seed"] == 42
+    assert rows[1]["seed"] == 42
+    assert rows[1]["summary_path"].endswith("baseline_seed42_S1.json")
+
+
+def test_load_manifest_rows_can_filter_to_official_hv_entries(local_tmp_path):
+    module = _load_module()
+
+    summary_dir = local_tmp_path / "eval"
+    summary_dir.mkdir()
+    manifest_path = local_tmp_path / "phase4_main_manifest.json"
+
+    (summary_dir / "morl_p1_seed42_S2.json").write_text(
+        '{"J_speed": 0.1, "J_energy": 80.0, "J_smooth": 1.3, "J_stable": 0.3}',
+        encoding="utf-8",
+    )
+    (summary_dir / "morl_p5_seed42_S2.json").write_text(
+        '{"J_speed": 0.2, "J_energy": 82.0, "J_smooth": 1.2, "J_stable": 0.4}',
+        encoding="utf-8",
+    )
+    (summary_dir / "baseline_seed42_S2.json").write_text(
+        '{"J_speed": 0.3, "J_energy": 90.0, "J_smooth": 1.4, "J_stable": 0.5}',
+        encoding="utf-8",
+    )
+    manifest_path.write_text(
+        """
+{
+  "entries": [
+    {
+      "family": "morl",
+      "policy_id": "P1",
+      "canonical_seed": 42,
+      "run_dir": "D:/runs/morl_p1_seed42",
+      "checkpoint": "model_899.pt",
+      "task": "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-Play-v2",
+      "output_stem": "morl_p1_seed42",
+      "evidence_layer": "A",
+      "official_hv_eligible": true
+    },
+    {
+      "family": "morl",
+      "policy_id": "P5",
+      "canonical_seed": 42,
+      "run_dir": "D:/runs/morl_p5_seed42",
+      "checkpoint": "model_899.pt",
+      "task": "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-Play-v2",
+      "output_stem": "morl_p5_seed42",
+      "evidence_layer": "B",
+      "official_hv_eligible": false
+    },
+    {
+      "family": "baseline",
+      "policy_id": "baseline",
+      "canonical_seed": 42,
+      "run_dir": "D:/runs/baseline_seed42",
+      "checkpoint": "model_1499.pt",
+      "task": "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Play-v0",
+      "output_stem": "baseline_seed42",
+      "evidence_layer": "D",
+      "official_hv_eligible": false
+    }
+  ]
+}
+""".strip(),
+        encoding="utf-8",
+    )
+
+    rows = module.load_manifest_rows(
+        summary_dir=summary_dir,
+        manifest_path=manifest_path,
+        scenario="S2",
+        official_only=True,
+    )
+
+    assert [row["policy"] for row in rows] == ["P1"]
+
+
+def test_load_phase4_analysis_settings_uses_analysis_config_bounds_and_ref_point(local_tmp_path):
+    module = _load_module()
+
+    config_path = local_tmp_path / "phase4_analysis_config.json"
+    config_path.write_text(
+        """
+{
+  "normalization_bounds": {
+    "J_speed": [0.0, 1.6],
+    "J_energy": [0.0, 2500.0],
+    "J_smooth": [0.0, 2.6],
+    "J_stable": [0.0, 0.8]
+  },
+  "ref_point": [1.2, 1.2, 1.2, 1.2]
+}
+""".strip(),
+        encoding="utf-8",
+    )
+
+    bounds, ref_point = module.load_phase4_analysis_settings(config_path)
+
+    assert bounds == {
+        "J_speed": (0.0, 1.6),
+        "J_energy": (0.0, 2500.0),
+        "J_smooth": (0.0, 2.6),
+        "J_stable": (0.0, 0.8),
+    }
+    assert ref_point == (1.2, 1.2, 1.2, 1.2)

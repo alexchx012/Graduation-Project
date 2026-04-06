@@ -1,0 +1,64 @@
+{
+  "frozen_on": "2026-04-06",
+  "anchor_policy_id": "P10",
+  "anchor_role": "ablation_anchor",
+  "paper_positioning": {
+    "robust_shortlist": ["P2", "P3"],
+    "strongest_overall_candidate": "P2",
+    "ablation_anchor": "P10",
+    "anchor_rationale": [
+      "P10 is kept as the ablation anchor because it is the most interpretable balanced full model in the confirmatory set.",
+      "P10 is not frozen as the final strongest policy; it is frozen as the best local-necessity anchor for energy and smoothness ablations.",
+      "P2/P3 remain the six-scenario robust shortlist for paper-level recommendation discussion."
+    ]
+  },
+  "training_protocol": {
+    "task": "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-v2",
+    "command_profile": "repair_forward_v2",
+    "num_envs": 4096,
+    "max_iterations": 900,
+    "clip_param": 0.2,
+    "curriculum_warmup": 300,
+    "curriculum_ramp": 300,
+    "training_seeds": [42, 43, 44],
+    "init_source": "baseline_warm_start",
+    "init_checkpoint": "logs/rsl_rl/unitree_go1_rough/2026-03-08_16-46-27_baseline_rough_ros2cmd/model_1499.pt",
+    "init_with_optimizer": true,
+    "protocol_note": "Current default protocol retrains ablation models from baseline warm-start rather than continuing from anchor-full."
+  },
+  "anchor_summary": {
+    "front_membership_count": 3,
+    "front_membership_rate": 0.5,
+    "scenarios_on_front": ["S3", "S4", "S5"],
+    "bootstrap_mean_p_on_front": 0.4025,
+    "unstable_scenarios": []
+  },
+  "entries": [
+    {
+      "ablation_id": "anchor-full",
+      "name": "morl_p10_anchor_full",
+      "policy_id": "P10",
+      "role": "anchor_full",
+      "morl_weights": [0.2, 0.2, 0.2, 0.4],
+      "note": "Balanced full model used as the ablation anchor."
+    },
+    {
+      "ablation_id": "anchor-no-energy",
+      "name": "morl_p10_ablation_no_energy",
+      "policy_id": "P10-no-energy",
+      "role": "ablation_variant",
+      "morl_weights": [0.25, 0.0, 0.25, 0.5],
+      "ablated_objective": "energy",
+      "note": "Energy objective removed from the balanced P10 anchor."
+    },
+    {
+      "ablation_id": "anchor-no-smooth",
+      "name": "morl_p10_ablation_no_smooth",
+      "policy_id": "P10-no-smooth",
+      "role": "ablation_variant",
+      "morl_weights": [0.25, 0.25, 0.0, 0.5],
+      "ablated_objective": "smoothness",
+      "note": "Smoothness objective removed from the balanced P10 anchor."
+    }
+  ]
+}

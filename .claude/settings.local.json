@@ -61,7 +61,10 @@
       "Bash(grep \"run_full_eval_matrix.py\\\\|run_morl_ablation.py\" \"D:\\\\Graduation-Project\\\\scripts\\\\phase_morl\"/*.py)",
       "Bash(wc -l \"D:\\\\Graduation-Project\\\\logs\\\\eval\\\\phase_morl_v2\\\\morl_p\"*\"_S1.json\")",
       "Bash(xargs head:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(mkdir -p \"归档_v1旧版Pareto\" \"阶段四_Pareto分析\")",
+      "Bash(mv pareto_front_pairwise.png pareto_front_policy_summary.png \"归档_v1旧版Pareto/\")",
+      "Bash(mv pareto_front_pairwise_S1.png pareto_front_policy_summary_S1.png pareto_front_pairwise_S2.png pareto_front_policy_summary_S2.png \"阶段四_Pareto分析/\")"
     ]
   },
   "outputStyle": "Explanatory"

@@ -30,6 +30,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -55,6 +56,7 @@ DEFAULT_MAX_ITERATIONS = 900
 DEFAULT_CURRICULUM_WARMUP = 300
 DEFAULT_CURRICULUM_RAMP = 300
 DEFAULT_COMMAND_PROFILE = "repair_forward_v2"
+DEFAULT_ABLATION_MANIFEST = SCRIPT_DIR / "manifests" / "phase4_ablation_manifest.json"
 BASELINE_INIT_CHECKPOINT = (
     Path("logs")
     / "rsl_rl"
@@ -85,19 +87,89 @@ DEFAULT_ABLATION_IDS = ("no-energy", "no-smooth")
 DEFAULT_SEEDS = [42, 43, 44]
 
 
-def _build_ablation_experiment(ablation_id: str, project_root: Path) -> dict:
-    spec = dict(ABLATION_SPECS[ablation_id])
-    spec["task"] = MORL_V2_TASK
-    spec["command_profile"] = DEFAULT_COMMAND_PROFILE
-    spec["morl_curriculum_warmup"] = DEFAULT_CURRICULUM_WARMUP
-    spec["morl_curriculum_ramp"] = DEFAULT_CURRICULUM_RAMP
-    spec["init_with_optimizer"] = True
-    checkpoint_path = (project_root / BASELINE_INIT_CHECKPOINT).resolve()
-    if checkpoint_path.exists():
-        spec["init_checkpoint"] = str(checkpoint_path)
-    else:
-        print(f"[WARNING] Baseline checkpoint not found: {checkpoint_path}")
-    return spec
+def _weights_to_cli_string(weights: list[float] | tuple[float, ...] | str) -> str:
+    if isinstance(weights, str):
+        return weights
+    return ",".join(str(float(weight)) for weight in weights)
+
+
+def _normalize_entry_id(entry_id: str) -> str:
+    alias_map = {
+        "no-energy": "anchor-no-energy",
+        "no-smooth": "anchor-no-smooth",
+        "full": "anchor-full",
+    }
+    normalized = entry_id.strip().lower()
+    return alias_map.get(normalized, normalized)
+
+
+def load_phase4_ablation_manifest(path: Path | str = DEFAULT_ABLATION_MANIFEST, *, project_root: Path) -> dict:
+    manifest_path = Path(path)
+    if not manifest_path.is_absolute():
+        manifest_path = (project_root / manifest_path).resolve()
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Phase 4 ablation manifest not found: {manifest_path}")
+    return json.loads(manifest_path.read_text(encoding="utf-8"))
+
+
+def select_ablation_experiments(
+    manifest: dict,
+    *,
+    project_root: Path,
+    entry_ids: set[str] | None,
+    include_anchor_full: bool,
+) -> tuple[list[dict], dict]:
+    protocol = dict(manifest.get("training_protocol", {}))
+    entries_raw = manifest.get("entries", [])
+    if not isinstance(entries_raw, list):
+        raise ValueError("Invalid ablation manifest: missing 'entries' list")
+
+    normalized_entry_ids = {_normalize_entry_id(entry_id) for entry_id in entry_ids} if entry_ids else None
+    known_ids = {str(entry["ablation_id"]) for entry in entries_raw}
+    if normalized_entry_ids:
+        unknown = sorted(normalized_entry_ids - known_ids)
+        if unknown:
+            raise ValueError(f"Unknown ablation entry ids: {unknown}. Known: {sorted(known_ids)}")
+
+    experiments: list[dict] = []
+    for raw in entries_raw:
+        entry_id = str(raw["ablation_id"])
+        role = str(raw.get("role", "ablation_variant"))
+        if normalized_entry_ids is not None:
+            if entry_id not in normalized_entry_ids:
+                continue
+        else:
+            if role != "ablation_variant" and not (include_anchor_full and role == "anchor_full"):
+                continue
+
+        spec = {
+            "ablation_id": entry_id,
+            "name": str(raw["name"]),
+            "policy_id": str(raw["policy_id"]),
+            "role": role,
+            "morl_weights": _weights_to_cli_string(raw["morl_weights"]),
+            "note": str(raw.get("note", "")),
+            "task": str(protocol.get("task", MORL_V2_TASK)),
+            "command_profile": str(protocol.get("command_profile", DEFAULT_COMMAND_PROFILE)),
+            "morl_curriculum_warmup": int(protocol.get("curriculum_warmup", DEFAULT_CURRICULUM_WARMUP)),
+            "morl_curriculum_ramp": int(protocol.get("curriculum_ramp", DEFAULT_CURRICULUM_RAMP)),
+            "init_with_optimizer": bool(protocol.get("init_with_optimizer", True)),
+        }
+
+        init_checkpoint = protocol.get("init_checkpoint")
+        if init_checkpoint:
+            checkpoint_path = Path(str(init_checkpoint))
+            if not checkpoint_path.is_absolute():
+                checkpoint_path = (project_root / checkpoint_path).resolve()
+            spec["init_checkpoint"] = str(checkpoint_path)
+
+        experiments.append(spec)
+
+    protocol["training_seeds"] = [int(seed) for seed in protocol.get("training_seeds", DEFAULT_SEEDS)]
+    protocol["num_envs"] = int(protocol.get("num_envs", NUM_ENVS))
+    protocol["max_iterations"] = int(protocol.get("max_iterations", DEFAULT_MAX_ITERATIONS))
+    protocol["clip_param"] = float(protocol.get("clip_param", DEFAULT_CLIP_PARAM))
+    return experiments, protocol
 
 
 def main():
@@ -107,20 +179,31 @@ def main():
         epilog=__doc__,
     )
     parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=DEFAULT_ABLATION_MANIFEST,
+        help="Path to phase4_ablation_manifest.json",
+    )
+    parser.add_argument(
         "--ablation-ids",
         type=str,
         default=None,
-        help="Comma-separated ablation ids (default: no-energy,no-smooth).",
+        help="Comma-separated manifest ablation ids (legacy aliases no-energy/no-smooth are supported).",
+    )
+    parser.add_argument(
+        "--include-anchor-full",
+        action="store_true",
+        help="Also include the anchor-full entry from the ablation manifest.",
     )
     parser.add_argument(
         "--seeds",
         type=str,
-        default="42,43,44",
-        help="Comma-separated seeds (default: 42,43,44).",
+        default=None,
+        help="Optional comma-separated seeds override (default: use ablation manifest).",
     )
-    parser.add_argument("--num-envs", type=int, default=NUM_ENVS)
-    parser.add_argument("--max-iterations", type=int, default=DEFAULT_MAX_ITERATIONS)
-    parser.add_argument("--clip-param", type=float, default=DEFAULT_CLIP_PARAM)
+    parser.add_argument("--num-envs", type=int, default=None)
+    parser.add_argument("--max-iterations", type=int, default=None)
+    parser.add_argument("--clip-param", type=float, default=None)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--project-root", type=Path, default=None)
@@ -128,18 +211,27 @@ def main():
 
     project_root = args.project_root or Path(__file__).resolve().parents[2]
 
-    # Select ablations
-    if args.ablation_ids:
-        ablation_ids = [s.strip().lower() for s in args.ablation_ids.split(",") if s.strip()]
-        unknown = [a for a in ablation_ids if a not in ABLATION_SPECS]
-        if unknown:
-            print(f"[ERROR] Unknown ablation ids: {unknown}. Known: {sorted(ABLATION_SPECS)}")
-            sys.exit(1)
-    else:
-        ablation_ids = list(DEFAULT_ABLATION_IDS)
+    try:
+        manifest = load_phase4_ablation_manifest(args.manifest, project_root=project_root)
+        selected_ids = {item.strip() for item in args.ablation_ids.split(",") if item.strip()} if args.ablation_ids else None
+        experiments, protocol = select_ablation_experiments(
+            manifest,
+            project_root=project_root,
+            entry_ids=selected_ids,
+            include_anchor_full=args.include_anchor_full,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"[ERROR] {exc}")
+        sys.exit(1)
 
-    seeds = _parse_seeds(args.seeds)
-    experiments = [_build_ablation_experiment(aid, project_root) for aid in ablation_ids]
+    if not experiments:
+        print("[ERROR] No ablation entries selected from manifest.")
+        sys.exit(1)
+
+    seeds = _parse_seeds(args.seeds) if args.seeds else list(protocol["training_seeds"])
+    num_envs = args.num_envs if args.num_envs is not None else protocol["num_envs"]
+    max_iterations = args.max_iterations if args.max_iterations is not None else protocol["max_iterations"]
+    clip_param = args.clip_param if args.clip_param is not None else protocol["clip_param"]
     total_runs = len(experiments) * len(seeds)
 
     log_dir = project_root / "logs" / "sweep" / "phase_morl_ablation"
@@ -148,8 +240,10 @@ def main():
     log_path = log_dir / f"ablation_{timestamp}.log"
     log = DualLogger(log_path)
     log.info(f"Project root: {project_root}")
-    log.info(f"Ablations: {ablation_ids}")
+    log.info(f"Manifest: {Path(args.manifest)}")
+    log.info(f"Selected entries: {[exp['ablation_id'] for exp in experiments]}")
     log.info(f"Seeds: {seeds}, Total runs: {total_runs}")
+    log.info(f"num_envs={num_envs}, max_iterations={max_iterations}, clip_param={clip_param}")
 
     session_path = log_dir / "session_ablation.json"
     session = SessionState.load(session_path) if args.resume else SessionState(
@@ -178,9 +272,9 @@ def main():
                     log,
                     ros2_mgr=None,
                     dry_run=args.dry_run,
-                    num_envs=args.num_envs,
-                    max_iterations=args.max_iterations,
-                    clip_param=args.clip_param,
+                    num_envs=num_envs,
+                    max_iterations=max_iterations,
+                    clip_param=clip_param,
                     sweep_log_subdir="phase_morl_ablation",
                 )
                 results.append(result)

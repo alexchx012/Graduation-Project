@@ -6,6 +6,7 @@ import argparse
 import json
 import math
 import re
+import sys
 from itertools import combinations
 from pathlib import Path
 
@@ -16,6 +17,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from phase4_manifest import DEFAULT_PHASE4_ANALYSIS_CONFIG, load_phase4_analysis_config, load_phase4_manifest
+
 DEFAULT_SUMMARY_DIR = PROJECT_ROOT / "logs" / "eval" / "phase_morl_v2"
 DEFAULT_RUN_ROOT = PROJECT_ROOT / "logs" / "rsl_rl" / "unitree_go1_rough"
 DEFAULT_OUTPUT_JSON = DEFAULT_SUMMARY_DIR / "pareto_analysis.json"
@@ -56,6 +63,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Analyze MORL eval results and produce Pareto/HV artifacts.")
     parser.add_argument("--summary_dir", type=Path, default=DEFAULT_SUMMARY_DIR, help="Directory containing eval JSONs.")
     parser.add_argument("--run_root", type=Path, default=DEFAULT_RUN_ROOT, help="Directory containing active run folders.")
+    parser.add_argument("--manifest", type=Path, default=None, help="Optional Phase 4 manifest JSON. When set, rows are loaded from manifest entries instead of active run discovery.")
+    parser.add_argument("--analysis-config", type=Path, default=DEFAULT_PHASE4_ANALYSIS_CONFIG, help="Optional Phase 4 analysis config JSON for frozen bounds/ref point.")
+    parser.add_argument("--include-nonofficial-manifest", action="store_true", help="When used with --manifest, include non-official entries such as exploratory/baseline rows.")
     parser.add_argument("--output_json", type=Path, default=None, help="Output JSON artifact path (auto-named if --scenario set).")
     parser.add_argument("--figure_dir", type=Path, default=DEFAULT_FIGURE_DIR, help="Directory for generated figures.")
     parser.add_argument("--scenario", type=str, default=DEFAULT_SCENARIO, help="Scenario id (e.g. S1). Looks for {run}_{scenario}.json naming.")
@@ -130,6 +140,48 @@ def load_run_rows(summary_dir: Path, run_root: Path, scenario: str | None = None
             "summary_path": str(summary_path),
             "weights": POLICY_WEIGHT_MAP.get(policy_name),
             "scenario": scenario or data.get("scenario_id"),
+        }
+        for key in OBJECTIVE_KEYS + SUPPLEMENTAL_KEYS + ("elapsed_seconds",):
+            row[key] = data.get(key)
+        run_rows.append(row)
+    return run_rows
+
+
+def load_manifest_rows(
+    summary_dir: Path,
+    manifest_path: Path,
+    scenario: str | None = None,
+    *,
+    official_only: bool = False,
+) -> list[dict]:
+    if not summary_dir.exists():
+        raise FileNotFoundError(f"Summary directory not found: {summary_dir}")
+
+    run_rows: list[dict] = []
+    for entry in load_phase4_manifest(manifest_path):
+        if official_only and not entry.official_hv_eligible:
+            continue
+        if scenario:
+            summary_path = summary_dir / f"{entry.output_stem}_{scenario}.json"
+            if not summary_path.exists():
+                continue
+        else:
+            summary_path = summary_dir / f"{entry.output_stem}.json"
+            if not summary_path.exists():
+                raise FileNotFoundError(f"Missing eval summary for manifest entry: {summary_path}")
+
+        data = json.loads(summary_path.read_text(encoding="utf-8"))
+        row = {
+            "run": Path(entry.run_dir).name,
+            "policy": entry.policy_id,
+            "seed": entry.canonical_seed,
+            "policy_id": data.get("policy_id"),
+            "summary_path": str(summary_path),
+            "weights": POLICY_WEIGHT_MAP.get(entry.policy_id),
+            "scenario": scenario or data.get("scenario_id"),
+            "family": entry.family,
+            "evidence_layer": entry.evidence_layer,
+            "official_hv_eligible": entry.official_hv_eligible,
         }
         for key in OBJECTIVE_KEYS + SUPPLEMENTAL_KEYS + ("elapsed_seconds",):
             row[key] = data.get(key)
@@ -265,6 +317,17 @@ def build_analysis_payload(
     }
 
 
+def load_phase4_analysis_settings(path: Path | str = DEFAULT_PHASE4_ANALYSIS_CONFIG) -> tuple[dict[str, tuple[float, float]], tuple[float, ...]]:
+    data = load_phase4_analysis_config(path)
+    raw_bounds = data.get("normalization_bounds", {})
+    bounds = {
+        key: tuple(float(value) for value in raw_bounds.get(key, FROZEN_NORMALIZATION_BOUNDS[key]))
+        for key in OBJECTIVE_KEYS
+    }
+    ref_point = tuple(float(value) for value in data.get("ref_point", DEFAULT_REF_POINT))
+    return bounds, ref_point
+
+
 def save_pairwise_figure(policy_rows: list[dict], pareto_policy_names: set[str], output_path: Path) -> None:
     metric_pairs = list(combinations(OBJECTIVE_KEYS, 2))
     fig, axes = plt.subplots(2, 3, figsize=(16, 9))
@@ -292,8 +355,14 @@ def save_pairwise_figure(policy_rows: list[dict], pareto_policy_names: set[str],
     plt.close(fig)
 
 
-def save_policy_summary_figure(policy_rows: list[dict], pareto_policy_names: set[str], output_path: Path) -> None:
-    normalized_rows = normalize_objective_rows(policy_rows, bounds=FROZEN_NORMALIZATION_BOUNDS)
+def save_policy_summary_figure(
+    policy_rows: list[dict],
+    pareto_policy_names: set[str],
+    output_path: Path,
+    *,
+    bounds: dict[str, tuple[float, float]] = FROZEN_NORMALIZATION_BOUNDS,
+) -> None:
+    normalized_rows = normalize_objective_rows(policy_rows, bounds=bounds)
 
     policies = [row["policy"] for row in normalized_rows]
     positions = np.arange(len(policies))
@@ -334,12 +403,22 @@ def main() -> None:
     if args.output_json is None:
         args.output_json = args.summary_dir / f"pareto_analysis{scenario_suffix}.json"
 
-    run_rows = load_run_rows(summary_dir=args.summary_dir, run_root=args.run_root, scenario=scenario)
+    if args.manifest:
+        run_rows = load_manifest_rows(
+            summary_dir=args.summary_dir,
+            manifest_path=args.manifest,
+            scenario=scenario,
+            official_only=not args.include_nonofficial_manifest,
+        )
+        bounds, ref_point = load_phase4_analysis_settings(args.analysis_config)
+    else:
+        run_rows = load_run_rows(summary_dir=args.summary_dir, run_root=args.run_root, scenario=scenario)
+        bounds, ref_point = FROZEN_NORMALIZATION_BOUNDS, DEFAULT_REF_POINT
     if not run_rows:
         print(f"[PARETO] No eval data found (summary_dir={args.summary_dir}, scenario={scenario})")
         return
 
-    payload = build_analysis_payload(run_rows)
+    payload = build_analysis_payload(run_rows, bounds=bounds, ref_point=ref_point)
     if scenario:
         payload["scenario"] = scenario
 
@@ -355,6 +434,7 @@ def main() -> None:
     save_policy_summary_figure(
         policy_rows, pareto_policy_names,
         args.figure_dir / f"pareto_front_policy_summary{scenario_suffix}.png",
+        bounds=bounds,
     )
 
     print(f"[PARETO] JSON written to: {args.output_json}")

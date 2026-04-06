@@ -43,6 +43,11 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parents[1]
 
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from phase4_manifest import filter_phase4_manifest_entries, load_phase4_manifest
+
 # Default evaluation parameters
 DEFAULT_TASK = "Isaac-Velocity-MORL-Unitree-Go1-ROS2Cmd-Play-v2"
 DEFAULT_SCENARIOS = ["S1"]
@@ -66,6 +71,17 @@ class EvalResult:
     output_json: str | None = None
     duration_s: float = 0.0
     error: str | None = None
+
+
+@dataclass
+class EvalTarget:
+    run_dir_name: str
+    policy_id: str
+    seed: int
+    task: str
+    checkpoint: str
+    output_stem: str
+    family: str = "morl"
 
 
 @dataclass
@@ -94,7 +110,7 @@ def discover_trained_runs(
     run_root: Path,
     policy_ids: set[str] | None = None,
     seeds: set[int] | None = None,
-) -> list[tuple[str, str, int]]:
+) -> list[EvalTarget]:
     """Discover trained policy directories matching morl_pX_seedY pattern.
 
     Returns list of (run_dir_name, policy_id, seed).
@@ -102,7 +118,7 @@ def discover_trained_runs(
     if not run_root.exists():
         return []
 
-    runs = []
+    runs: list[EvalTarget] = []
     for path in sorted(run_root.iterdir()):
         if not path.is_dir():
             continue
@@ -115,8 +131,68 @@ def discover_trained_runs(
             continue
         if seeds and seed not in seeds:
             continue
-        runs.append((path.name, policy_id, seed))
+        runs.append(
+            EvalTarget(
+                run_dir_name=path.name,
+                policy_id=policy_id,
+                seed=seed,
+                task=DEFAULT_TASK,
+                checkpoint=DEFAULT_CHECKPOINT,
+                output_stem=f"morl_{policy_id.lower()}_seed{seed}",
+                family="morl",
+            )
+        )
     return runs
+
+
+def load_eval_targets_from_manifest(
+    manifest_path: Path,
+    *,
+    policy_ids: set[str] | None = None,
+    seeds: set[int] | None = None,
+) -> list[EvalTarget]:
+    entries = filter_phase4_manifest_entries(
+        load_phase4_manifest(manifest_path),
+        policy_ids=policy_ids,
+        seeds=seeds,
+    )
+
+    targets = [
+        EvalTarget(
+            run_dir_name=entry.run_dir,
+            policy_id=entry.policy_id,
+            seed=entry.canonical_seed,
+            task=entry.task,
+            checkpoint=entry.checkpoint,
+            output_stem=entry.output_stem,
+            family=entry.family,
+        )
+        for entry in entries
+    ]
+    return targets
+
+
+def validate_eval_targets(
+    targets: list[EvalTarget],
+    *,
+    run_root: Path | None = None,
+) -> list[str]:
+    errors: list[str] = []
+    for target in targets:
+        run_dir = Path(target.run_dir_name)
+        if not run_dir.is_absolute() and run_root is not None:
+            run_dir = run_root / run_dir
+        run_dir = run_dir.resolve(strict=False)
+
+        if not run_dir.exists():
+            errors.append(f"Missing run directory: {run_dir}")
+            continue
+
+        checkpoint_path = run_dir / target.checkpoint
+        if not checkpoint_path.exists():
+            errors.append(f"Missing checkpoint: {checkpoint_path}")
+
+    return errors
 
 
 def build_eval_cmd(
@@ -149,11 +225,17 @@ def build_eval_cmd(
     return cmd
 
 
-def main():
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Phase 4: Full evaluation matrix",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
+    )
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=None,
+        help="Optional Phase 4 manifest JSON. When set, entries are loaded from the manifest instead of discovering run directories by regex.",
     )
     parser.add_argument(
         "--policy-ids",
@@ -202,6 +284,16 @@ def main():
     parser.add_argument("--warmup-steps", type=int, default=DEFAULT_WARMUP_STEPS)
     parser.add_argument("--dry-run", action="store_true", help="Print commands only.")
     parser.add_argument("--resume", action="store_true", help="Skip completed evals.")
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Validate that discovered or manifest-provided run directories and checkpoints exist, then exit.",
+    )
+    return parser
+
+
+def main():
+    parser = build_parser()
     args = parser.parse_args()
 
     scenarios = [s.strip().upper() for s in args.scenarios.split(",") if s.strip()]
@@ -216,12 +308,28 @@ def main():
         else None
     )
 
-    # Discover trained runs
-    runs = discover_trained_runs(args.run_root, policy_ids=policy_ids, seeds=seeds)
+    if args.manifest:
+        runs = load_eval_targets_from_manifest(args.manifest, policy_ids=policy_ids, seeds=seeds)
+    else:
+        runs = discover_trained_runs(args.run_root, policy_ids=policy_ids, seeds=seeds)
+
     if not runs:
-        print(f"[ERROR] No trained runs found in {args.run_root}")
-        print("[HINT] Make sure the confirm sweep v2 training has completed.")
+        if args.manifest:
+            print(f"[ERROR] No evaluation targets found in manifest {args.manifest}")
+        else:
+            print(f"[ERROR] No trained runs found in {args.run_root}")
+            print("[HINT] Make sure the confirm sweep v2 training has completed.")
         sys.exit(1)
+
+    if args.validate:
+        errors = validate_eval_targets(runs, run_root=args.run_root)
+        if errors:
+            print(f"[VALIDATE] Failed: {len(errors)} issue(s)")
+            for err in errors:
+                print(f"[VALIDATE] {err}")
+            sys.exit(1)
+        print(f"[VALIDATE] OK: {len(runs)} target(s) validated")
+        sys.exit(0)
 
     total_evals = len(runs) * len(scenarios)
     print(f"[INFO] Discovered {len(runs)} trained runs")
@@ -241,41 +349,39 @@ def main():
     eval_idx = 0
 
     try:
-        for run_dir_name, policy_id, seed in runs:
+        for target in runs:
             for scenario in scenarios:
                 eval_idx += 1
-                eval_key = f"{run_dir_name}_{scenario}"
-                output_json = str(
-                    args.output_dir / f"morl_{policy_id.lower()}_seed{seed}_{scenario}.json"
-                )
+                eval_key = f"{target.output_stem}_{scenario}"
+                output_json = str(args.output_dir / f"{target.output_stem}_{scenario}.json")
 
                 if args.resume and session.is_done(eval_key):
                     print(f"[SKIP] {eval_key} ({eval_idx}/{total_evals})")
                     continue
 
-                print(f"\n[EVAL {eval_idx}/{total_evals}] {policy_id} seed={seed} {scenario}")
+                print(f"\n[EVAL {eval_idx}/{total_evals}] {target.policy_id} seed={target.seed} {scenario}")
 
                 cmd = build_eval_cmd(
-                    run_dir_name,
+                    target.run_dir_name,
                     scenario,
                     output_json,
-                    task=args.task,
+                    task=target.task if args.manifest else args.task,
                     num_envs=args.num_envs,
                     eval_steps=args.eval_steps,
                     warmup_steps=args.warmup_steps,
-                    checkpoint=args.checkpoint,
+                    checkpoint=target.checkpoint if args.manifest else args.checkpoint,
                 )
 
                 if args.dry_run:
                     print(f"  CMD: {' '.join(cmd)}")
                     results.append(EvalResult(
-                        policy_id=policy_id, seed=seed, scenario=scenario,
-                        run_name=run_dir_name, passed=True, error="dry-run",
+                        policy_id=target.policy_id, seed=target.seed, scenario=scenario,
+                        run_name=target.run_dir_name, passed=True, error="dry-run",
                     ))
                     continue
 
                 start_t = time.time()
-                stderr_path = args.output_dir / f"morl_{policy_id.lower()}_seed{seed}_{scenario}_stderr.log"
+                stderr_path = args.output_dir / f"{target.output_stem}_{scenario}_stderr.log"
                 try:
                     with open(stderr_path, "w", encoding="utf-8") as f_err:
                         proc = subprocess.run(
@@ -289,8 +395,8 @@ def main():
                     passed = proc.returncode == 0 and Path(output_json).exists()
 
                     result = EvalResult(
-                        policy_id=policy_id, seed=seed, scenario=scenario,
-                        run_name=run_dir_name, passed=passed,
+                        policy_id=target.policy_id, seed=target.seed, scenario=scenario,
+                        run_name=target.run_dir_name, passed=passed,
                         return_code=proc.returncode,
                         output_json=output_json if passed else None,
                         duration_s=duration,
@@ -308,16 +414,16 @@ def main():
                 except subprocess.TimeoutExpired:
                     duration = time.time() - start_t
                     result = EvalResult(
-                        policy_id=policy_id, seed=seed, scenario=scenario,
-                        run_name=run_dir_name, passed=False,
+                        policy_id=target.policy_id, seed=target.seed, scenario=scenario,
+                        run_name=target.run_dir_name, passed=False,
                         duration_s=duration, error="timeout",
                     )
                     session.failed.append(eval_key)
                     print(f"  [TIMEOUT] after {duration:.0f}s")
                 except Exception as exc:
                     result = EvalResult(
-                        policy_id=policy_id, seed=seed, scenario=scenario,
-                        run_name=run_dir_name, passed=False,
+                        policy_id=target.policy_id, seed=target.seed, scenario=scenario,
+                        run_name=target.run_dir_name, passed=False,
                         error=str(exc),
                     )
                     session.failed.append(eval_key)
