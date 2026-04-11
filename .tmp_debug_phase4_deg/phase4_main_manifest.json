@@ -1,1 +1,0 @@
-{"entries": [{"family": "baseline", "policy_id": "baseline", "canonical_seed": 43, "run_dir": "D:/runs/baseline_seed43", "checkpoint": "model_1499.pt", "task": "Isaac-Velocity-Rough-Unitree-Go1-ROS2Cmd-Play-v0", "output_stem": "baseline_seed43", "evidence_layer": "D", "official_hv_eligible": false, "source_state": "archive"}]}

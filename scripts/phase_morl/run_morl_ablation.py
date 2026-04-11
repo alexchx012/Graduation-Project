@@ -2,29 +2,35 @@
 """
 Phase 4 C-layer: MORL ablation experiments.
 
-Trains two ablation variants of P10 (stability-balanced):
-- P10-no-energy: Remove energy objective  (speed=0.25, energy=0.0, smooth=0.25, stable=0.5)
-- P10-no-smooth: Remove smoothness objective (speed=0.25, energy=0.25, smooth=0.0, stable=0.5)
+Loads ablation definitions from `phase4_ablation_manifest.json`.
 
-These are compared against P10-full from the A-layer confirm sweep to
-isolate the contribution of each MORL objective.
+Default behavior:
+- train only entries whose role is `ablation_variant`
+- keep `anchor-full` in the manifest as the frozen control entry
+- include `anchor-full` in training only when `--include-anchor-full` is set
 
-All experiments use v2 architecture with curriculum (same as confirm sweep).
+Current frozen manifest uses:
+- `P10` as the ablation anchor full model
+- `P10-no-energy`
+- `P10-no-smooth`
+
+All experiments use the frozen Phase 4 v2 protocol from the manifest.
 
 Usage:
     conda activate env_isaaclab
 
-    # Run both ablations x 3 seeds (6 runs)
-    python scripts/phase_morl/run_morl_ablation.py
+    # Run default ablation variants x 3 seeds (6 runs)
+    python scripts/phase_morl/run_morl_ablation.py --manifest scripts/phase_morl/manifests/phase4_ablation_manifest.json
 
-    # Run specific ablation
-    python scripts/phase_morl/run_morl_ablation.py --ablation-ids no-energy
+    # Run a specific manifest entry
+    python scripts/phase_morl/run_morl_ablation.py --manifest scripts/phase_morl/manifests/phase4_ablation_manifest.json --ablation-ids anchor-no-energy
 
-    # Dry run
-    python scripts/phase_morl/run_morl_ablation.py --dry-run
+    # Also include anchor-full (9 runs total with current frozen manifest)
+    python scripts/phase_morl/run_morl_ablation.py --manifest scripts/phase_morl/manifests/phase4_ablation_manifest.json --include-anchor-full
 
-    # Resume
-    python scripts/phase_morl/run_morl_ablation.py --resume
+    # Dry run / resume
+    python scripts/phase_morl/run_morl_ablation.py --manifest scripts/phase_morl/manifests/phase4_ablation_manifest.json --dry-run
+    python scripts/phase_morl/run_morl_ablation.py --manifest scripts/phase_morl/manifests/phase4_ablation_manifest.json --resume
 """
 
 from __future__ import annotations
@@ -193,7 +199,7 @@ def main():
     parser.add_argument(
         "--include-anchor-full",
         action="store_true",
-        help="Also include the anchor-full entry from the ablation manifest.",
+        help="Also include the anchor-full entry from the ablation manifest (default: variants only).",
     )
     parser.add_argument(
         "--seeds",

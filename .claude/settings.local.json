@@ -64,7 +64,8 @@
       "Bash(grep:*)",
       "Bash(mkdir -p \"归档_v1旧版Pareto\" \"阶段四_Pareto分析\")",
       "Bash(mv pareto_front_pairwise.png pareto_front_policy_summary.png \"归档_v1旧版Pareto/\")",
-      "Bash(mv pareto_front_pairwise_S1.png pareto_front_policy_summary_S1.png pareto_front_pairwise_S2.png pareto_front_policy_summary_S2.png \"阶段四_Pareto分析/\")"
+      "Bash(mv pareto_front_pairwise_S1.png pareto_front_policy_summary_S1.png pareto_front_pairwise_S2.png pareto_front_policy_summary_S2.png \"阶段四_Pareto分析/\")",
+      "Bash(rm:*)"
     ]
   },
   "outputStyle": "Explanatory"
